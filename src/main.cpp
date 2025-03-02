@@ -10,9 +10,12 @@ class Field
 private:
 	int size = 10;
 	std::vector<Vector2> points;
+	std::vector<Vector2> far_points;
+	int center_x, center_y;
+
 	int player = 0;
 	Vector2 player_pos = {0, 0};
-	Vector2 target_pos;
+	// std::vector<Vector2> projectiles;
 
 public:
 	void Update(float delta_time)
@@ -21,10 +24,15 @@ public:
 			player = (player + size - 1) % size;
 		if (IsKeyPressed(KEY_RIGHT))
 			player = (player + 1) % size;
+		// if (IsKeyPressed(SPACE))
+		// 	projectiles.push_back();
 
+		Vector2 target_pos;
 		for (int i = 0; i < size; i++)
 		{
 			DrawLineV(points[i], points[(i + 1) % size], WHITE);
+			DrawLineV(far_points[i], far_points[(i + 1) % size], GRAY);
+			DrawLineV(points[i], far_points[i], GRAY);
 
 			if (i == player)
 			{
@@ -37,14 +45,17 @@ public:
 		DrawCircleV(player_pos, 10, RED);
 	}
 
-	Field(int center_x, int center_y, int n) : size(n)
+	Field(int x, int y, int n) : size(n), center_x(x), center_y(y)
 	{
-		int point_x, point_y;
 		for (int i = 0; i < size; i++)
 		{
-			point_x = (center_x + std::sin(360 / size * i * PI / 180) * 200);
-			point_y = (center_y - std::cos(360 / size * i * PI / 180) * 200);
+			int point_x = (center_x + std::sin(360 / size * i * PI / 180) * 200);
+			int point_y = (center_y - std::cos(360 / size * i * PI / 180) * 200);
 			points.push_back({ point_x, point_y });
+
+			point_x = (center_x + std::sin(360 / size * i * PI / 180) * 20);
+			point_y = (center_y - std::cos(360 / size * i * PI / 180) * 20);
+			far_points.push_back({ point_x, point_y });
 		}
 	}
 };
