@@ -15,18 +15,11 @@ private:
 
 	int player = 0;
 	Vector2 player_pos = {0, 0};
-	// std::vector<Vector2> projectiles;
+	std::vector<Vector2> projectiles;
 
 public:
 	void Update(float delta_time)
 	{
-		if (IsKeyPressed(KEY_LEFT))
-			player = (player + size - 1) % size;
-		if (IsKeyPressed(KEY_RIGHT))
-			player = (player + 1) % size;
-		// if (IsKeyPressed(SPACE))
-		// 	projectiles.push_back();
-
 		Vector2 target_pos;
 		for (int i = 0; i < size; i++)
 		{
@@ -41,7 +34,21 @@ public:
 			}
 		}
 
+		if (IsKeyPressed(KEY_LEFT))
+			player = (player + size - 1) % size;
+		if (IsKeyPressed(KEY_RIGHT))
+			player = (player + 1) % size;
+		if (IsKeyPressed(KEY_SPACE))
+			projectiles.push_back(target_pos);
+
 		player_pos = Vector2Lerp(player_pos, target_pos, delta_time * 10);
+		for (Vector2 &projectile : projectiles)
+		{
+			projectile = Vector2Lerp(projectile, {center_x, center_y}, delta_time * 10);
+			if (Vector2Distance(projectile, {center_x, center_y}) > 10)
+				DrawCircleV(projectile, 5, YELLOW);
+				
+		}
 		DrawCircleV(player_pos, 10, RED);
 	}
 
