@@ -51,12 +51,13 @@ public:
 		DrawCircleV(player_pos, 10, YELLOW);
 
 		// move projectiles
-		for (Vector2 &projectile : projectiles)
+		for (int i = 0; i < projectiles.size(); i++)
 		{
 			Vector2 offset = Vector2Add(center, (Vector2){0, 50});
-			projectile = Vector2MoveTowards(projectile, offset, delta_time * 300);
-			if (Vector2Distance(projectile, offset) > 20)
-				DrawCircleV(projectile, 5, YELLOW);
+			projectiles[i] = Vector2MoveTowards(projectiles[i], offset, delta_time * 300);
+			if (Vector2Distance(projectiles[i], offset) <= 20)
+				projectiles.erase(projectiles.begin() + i);
+			DrawCircleV(projectiles[i], 5, YELLOW);
 		}
 	}
 
