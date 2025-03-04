@@ -10,7 +10,8 @@
 	},
 	"files.associations": {
 		"vector": "cpp",
-		"cmath": "cpp"
+		"cmath": "cpp",
+		"*.m": "cpp"
 	},
 	"C_Cpp.errorSquiggles": "disabled"
 }
