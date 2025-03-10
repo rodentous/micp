@@ -11,8 +11,8 @@ void Game::generate()
 	// reset everything
 	points.clear();
 	far_points.clear();
-	player = 0;
-	player_pos = offset;
+	player.index =   0;
+	player.position = offset;
 
 	// place points in regular polygon:
 	int size = GetRandomValue(3, 10); // number of points
@@ -40,14 +40,14 @@ void Game::handle_input()
 {
 	// move player left/right
 	if (IsKeyPressed(KEY_LEFT))
-		player = (player + 1) % points.size();
+		player.index = (player.index + 1) % points.size();
 	if (IsKeyPressed(KEY_RIGHT))
-		player = (player + points.size() - 1) % points.size();
+		player.index = (player.index + points.size() - 1) % points.size();
 
 	// shoot
 	if (IsKeyPressed(KEY_SPACE))
 	{
-		projectiles.push_back(player_pos);
+		projectiles.push_back({player.index, player.position});
 		score += 100;
 	}
 
@@ -61,12 +61,12 @@ void Game::move_player(float delta_time)
 {
 	// target position
 	Vector2 target_pos;
-	target_pos.x = (points[player].x + points[(player + 1) % points.size()].x) / 2;
-	target_pos.y = (points[player].y + points[(player + 1) % points.size()].y) / 2;
+	target_pos.x = (points[player.index].x + points[(player.index + 1) % points.size()].x) / 2;
+	target_pos.y = (points[player.index].y + points[(player.index + 1) % points.size()].y) / 2;
 
 	// move player
-	player_pos = Vector2Lerp(player_pos, target_pos, delta_time * 10);
-	DrawCircleV(player_pos, 10, YELLOW);
+	player.position = Vector2Lerp(player.position, target_pos, delta_time * 10);
+	DrawCircleV(player.position, 10, YELLOW);
 }
 
 
@@ -74,13 +74,13 @@ void Game::move_projectiles(float delta_time)
 {
 	for (int i = 0; i < projectiles.size(); i++)
 	{
-		projectiles[i] = Vector2MoveTowards(projectiles[i], offset, delta_time * 300);
+		projectiles[i].position = Vector2MoveTowards(projectiles[i].position, offset, delta_time * 300);
 
 		// destroy projectile
-		if (Vector2Distance(projectiles[i], offset) <= 20)
+		if (Vector2Distance(projectiles[i].position, offset) <= 20)
 			projectiles.erase(projectiles.begin() + i);
 		
-		DrawCircleV(projectiles[i], 5, YELLOW);
+		DrawCircleV(projectiles[i].position, 5, YELLOW);
 	}
 }
 
@@ -116,10 +116,10 @@ void Game::draw()
 	}
 
 	// draw highlighted lines
-	DrawLineV(points[player], points[(player + 1) % points.size()], YELLOW);
-	DrawLineV(far_points[player], far_points[(player + 1) % points.size()], YELLOW);
-	DrawLineV(points[player], far_points[player], YELLOW);
-	DrawLineV(points[(player + 1) % points.size()], far_points[(player + 1) % points.size()], YELLOW);
+	DrawLineV(points[player.index], points[(player.index + 1) % points.size()], YELLOW);
+	DrawLineV(far_points[player.index], far_points[(player.index + 1) % points.size()], YELLOW);
+	DrawLineV(points[player.index], far_points[player.index], YELLOW);
+	DrawLineV(points[(player.index + 1) % points.size()], far_points[(player.index + 1) % points.size()], YELLOW);
 }
 
 

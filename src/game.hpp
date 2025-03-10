@@ -3,6 +3,13 @@
 
 
 
+struct Object
+{
+	int index;
+	Vector2 position;
+};
+
+
 class Game
 {
 
@@ -10,10 +17,9 @@ private:
 	std::vector<Vector2> points, far_points; // points of level
 	Vector2 center, offset; // coordinates of center/offset
 
-	int player = 0; // player index
-	Vector2 player_pos = {0, 0}; // actual player position
+	Object player;
 	
-	std::vector<Vector2> projectiles;
+	std::vector<Object> projectiles;
 
 	float level_transition = 0; // timer for level transition
 
