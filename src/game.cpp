@@ -71,13 +71,9 @@ public:
 		{
 			projectiles.push_back(player_pos);
 			score += 100;
-            next_level = 1;
 		}
-		
-		// target position for player
-		Vector2 target_pos;
-		target_pos.x = (points[player].x + points[(player + 1) % points.size()].x) / 2;
-		target_pos.y = (points[player].y + points[(player + 1) % points.size()].y) / 2;
+		if (IsKeyPressed(KEY_BACKSPACE))
+            next_level = 1;
 
 		// draw lines
 		for (int i = 0; i < points.size(); i++)
@@ -86,13 +82,17 @@ public:
 			DrawLineV(far_points[i], far_points[(i + 1) % points.size()], BLUE);
 			DrawLineV(points[i], far_points[i], BLUE);
 		}
-
 		// draw lines around player
 		DrawLineV(points[player], points[(player + 1) % points.size()], YELLOW);
 		DrawLineV(far_points[player], far_points[(player + 1) % points.size()], YELLOW);
 		DrawLineV(points[player], far_points[player], YELLOW);
 		DrawLineV(points[(player + 1) % points.size()], far_points[(player + 1) % points.size()], YELLOW);
 
+		
+		// target position for player
+		Vector2 target_pos;
+		target_pos.x = (points[player].x + points[(player + 1) % points.size()].x) / 2;
+		target_pos.y = (points[player].y + points[(player + 1) % points.size()].y) / 2;
 		// move player
 		player_pos = Vector2Lerp(player_pos, target_pos, delta_time * 10);
 		DrawCircleV(player_pos, 10, YELLOW);
