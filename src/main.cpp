@@ -1,4 +1,4 @@
-#include "game.cpp"
+#include "game.hpp"
 
 int main ()
 {
@@ -15,7 +15,7 @@ int main ()
 		ClearBackground(BLACK);
 
 		game.update(GetFrameTime());
-		DrawText("SCORE: ", 10, 10, 25, WHITE);
+		DrawText(TextFormat("SCORE: %d", game.score), 10, 10, 25, WHITE);
 
 		EndDrawing();
 	}
