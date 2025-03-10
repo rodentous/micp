@@ -16,6 +16,7 @@ int main ()
 
 		game.update(GetFrameTime());
 		DrawText(TextFormat("SCORE: %d", game.score), 10, 10, 25, WHITE);
+		DrawText(TextFormat("HP: %d", game.health), 10, 40, 25, WHITE);
 
 		EndDrawing();
 	}

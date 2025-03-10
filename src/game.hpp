@@ -18,13 +18,13 @@ private:
 	Vector2 center, offset; // coordinates of center/offset
 
 	Object player;
-	
-	std::vector<Object> projectiles;
+	std::vector<Object> projectiles, spikes;
 
 	float level_transition = 0; // timer for level transition
 
 public:
 	int score = 0;
+	int health = 5;
 
 	void generate();
 
@@ -36,7 +36,7 @@ public:
 
 	void transition(float delta_time);
 
-	void move_projectiles(float delta_time);
+	void move_objects(float delta_time);
 
 	void draw();
 

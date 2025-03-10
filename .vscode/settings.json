@@ -12,7 +12,8 @@
 		"vector": "cpp",
 		"cmath": "cpp",
 		"*.m": "cpp",
-		"xiosbase": "cpp"
+		"xiosbase": "cpp",
+		"xstring": "cpp"
 	},
 	"C_Cpp.errorSquiggles": "disabled"
 }
