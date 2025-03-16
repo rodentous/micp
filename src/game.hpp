@@ -1,3 +1,6 @@
+#ifndef GAME_H
+#define GAME_H
+
 #include "raylib.h"
 #include <vector>
 
@@ -60,20 +63,19 @@ private:
 	std::vector<Enemy> enemies;
 	std::vector<Projectile> projectiles;
 
-	float level_transition = 0; // timer for level transition
-	
 	void generate();
-	
-	void next_level();
 	
 	void transition(float delta_time);
 	
 	void draw();
 	
 public:
+	float level_transition = 0; // timer for level transition
 	Vector2 center, offset; // coordinates of center/offset
 	int score = 0, health = 5;
 
+	void next_level();
+	
 	void lose_health();
 	
 	void score_points();
@@ -82,3 +84,5 @@ public:
 
 	Game(Vector2 c);
 };
+
+#endif
