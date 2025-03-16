@@ -15,12 +15,10 @@ class Object
 public:
 	Edge* edge;
 	Vector2 position;
-	int radius;
 	int speed;
 
+	Object(Edge* e) : edge(e) {}
 	void update(float delta_time);
-
-	Object(Edge* e);
 };
 
 
@@ -45,7 +43,8 @@ public:
 class Enemy : public Object
 {
 public:
-	int radius = 10;
+	Vector2 position1, position2;
+
 	Enemy(Edge* e, int s);
 	bool update(float delta_time);
 	bool collide(Vector2 pos, int r);

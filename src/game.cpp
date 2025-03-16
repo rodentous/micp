@@ -1,19 +1,8 @@
 #include "game.hpp"
 #include "raymath.h"
-
 #include <cmath>
 #include <random>
 
-
-
-Object::Object(Edge* e) : edge(e) {}
-
-
-Projectile::Projectile(Edge* e, Vector2 pos, int s) : Object(e)
-{
-	position = pos;
-	speed = s;
-}
 
 
 Player::Player(Edge* e) : Object(e)
@@ -25,20 +14,6 @@ Player::Player(Edge* e) : Object(e)
 	position.y = (edge->A.y + edge->B.y) / 2;
 }
 
-
-Enemy::Enemy(Edge* e, int s) : Object(e)
-{
-	if (!edge)
-		return;
-	
-	position.x = (edge->A2.x + edge->B2.x) / 2;
-	position.y = (edge->A2.y + edge->B2.y) / 2;
-
-	speed = s;
-}
-
-
-void Object::update(float delta_time) {}
 
 void Player::update(float delta_time)
 {
@@ -59,6 +34,13 @@ void Player::update(float delta_time)
 }
 
 
+Projectile::Projectile(Edge* e, Vector2 pos, int s) : Object(e)
+{
+	position = pos;
+	speed = s;
+}
+
+
 bool Projectile::update(float delta_time)
 {
 	Vector2 target_pos;
@@ -71,22 +53,36 @@ bool Projectile::update(float delta_time)
 }
 
 
+Enemy::Enemy(Edge* e, int s) : Object(e)
+{
+	if (!edge)
+		return;
+	
+	position1 = edge->A2;
+	position2 = edge->B2;
+
+	speed = s;
+}
+
+
 bool Enemy::update(float delta_time)
 {
-	Vector2 target_pos;
-	target_pos.x = (edge->A.x + edge->B.x) / 2;
-	target_pos.y = (edge->A.y + edge->B.y) / 2;
-	position = Vector2MoveTowards(position, target_pos, delta_time * speed);
-	DrawCircleV(position, radius, RED);
+	position1 = Vector2MoveTowards(position1, edge->A, delta_time * speed);
+	position2 = Vector2MoveTowards(position2, edge->B, delta_time * speed);
+	DrawLineV(position1, position2, RED);
 
-	return Vector2Distance(position, target_pos) < 1;
+	return Vector2Distance(position1, edge->A) < 1;
 }
 
 
 bool Enemy::collide(Vector2 pos, int r)
 {
-	return Vector2Distance(position, pos) < radius + r;
+	return CheckCollisionCircleLine(pos, r, position1, position2);
 }
+
+
+
+
 
 
 void Game::generate()
