@@ -1,6 +1,9 @@
 #include "game.hpp"
 
 
+
+int HIGH_SCORE = 0;
+
 int main ()
 {
 	constexpr int width = 1000, height = 800;
@@ -35,10 +38,14 @@ int main ()
 
 		game.update(GetFrameTime());
 		if (game.health <= 0)
+		{
+			if (game.score > HIGH_SCORE) HIGH_SCORE = game.score;
 			break;
+		}
 
 		DrawText(TextFormat("SCORE: %d", game.score), 10, 10, 25, WHITE);
-		DrawText(TextFormat("HP: %d", game.health), 10, 40, 25, WHITE);
+		DrawText(TextFormat("HIGH SCORE: %d", HIGH_SCORE), 10, 40, 25, WHITE);
+		DrawText(TextFormat("HP: %d", game.health), 10, 70, 25, WHITE);
 
 		EndDrawing();
 	}
