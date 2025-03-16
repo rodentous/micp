@@ -215,7 +215,7 @@ void Game::update(float delta_time)
 	
 	// spawn enemies
 	if (GetRandomValue(0, 200 - score / 50) == 0)
-		enemies.push_back(Enemy(&edges[GetRandomValue(0, edges.size())], 50 + score / 50));
+		enemies.push_back(Enemy(&edges[GetRandomValue(0, edges.size() - 1)], 50 + score / 50));
 }
 
 
