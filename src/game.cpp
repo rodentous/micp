@@ -6,130 +6,134 @@
 
 
 
+Object::Object(Edge* e) : edge(e) {}
+
+
+Projectile::Projectile(Edge* e, Vector2 pos, int s) : Object(e)
+{
+	position = pos;
+	speed = s;
+}
+
+
+Player::Player(Edge* e) : Object(e)
+{
+	if (!edge)
+		return;
+	
+	position.x = (edge->A.x + edge->B.x) / 2;
+	position.y = (edge->A.y + edge->B.y) / 2;
+}
+
+
+Enemy::Enemy(Edge* e, int s) : Object(e)
+{
+	if (!edge)
+		return;
+	
+	position.x = (edge->A2.x + edge->B2.x) / 2;
+	position.y = (edge->A2.y + edge->B2.y) / 2;
+
+	speed = s;
+}
+
+
+void Object::update(float delta_time) {}
+
+void Player::update(float delta_time)
+{
+	// move player left/right
+	if (IsKeyPressed(KEY_LEFT))
+		edge = edge->left;
+	if (IsKeyPressed(KEY_RIGHT))
+		edge = edge->right;
+
+	// target position
+	Vector2 target_pos;
+	target_pos.x = (edge->A.x + edge->B.x) / 2;
+	target_pos.y = (edge->A.y + edge->B.y) / 2;
+
+	// move player
+	position = Vector2Lerp(position, target_pos, delta_time * 10);
+	DrawCircleV(position, radius, YELLOW);
+}
+
+
+bool Projectile::update(float delta_time)
+{
+	Vector2 target_pos;
+	target_pos.x = (edge->A2.x + edge->B2.x) / 2;
+	target_pos.y = (edge->A2.y + edge->B2.y) / 2;
+	position = Vector2MoveTowards(position, target_pos, delta_time * speed);
+	DrawCircleV(position, radius, SKYBLUE);
+
+	return Vector2Distance(position, target_pos) < 1;
+}
+
+
+bool Enemy::update(float delta_time)
+{
+	Vector2 target_pos;
+	target_pos.x = (edge->A.x + edge->B.x) / 2;
+	target_pos.y = (edge->A.y + edge->B.y) / 2;
+	position = Vector2MoveTowards(position, target_pos, delta_time * speed);
+	DrawCircleV(position, radius, RED);
+
+	return Vector2Distance(position, target_pos) < 1;
+}
+
+
+bool Enemy::collide(Vector2 pos, int r)
+{
+	return Vector2Distance(position, pos) < radius + r;
+}
+
+
 void Game::generate()
 {
+	std::vector<Vector2> verticies, back_verticies; // verticies of the shape
+
 	// reset everything
-	points.clear();
-	far_points.clear();
-	player.index = 0;
-	player.position = offset;
+	edges.clear();
 
 	// place points in regular polygon:
-	int size = GetRandomValue(4, 10); // number of points
+	int size = score / 1000 + 4; // number of points
 	for (int i = 0; i < size; i++)
 	{
-		int x = (center.x + std::sin(360 / size * i * PI / 180) * 300);
-		int y = (center.y - std::cos(360 / size * i * PI / 180) * 300);
-		points.push_back((Vector2){ x, y });
+		float x = (center.x + std::sin(360 / size * i * PI / 180) * 300);
+		float y = (center.y - std::cos(360 / size * i * PI / 180) * 300);
+		verticies.push_back((Vector2){ x, y });
 
 		x = (offset.x + std::sin(360 / size * i * PI / 180) * 20);
 		y = (offset.y - std::cos(360 / size * i * PI / 180) * 20);
-		far_points.push_back((Vector2){ x, y });
+		back_verticies.push_back((Vector2){ x, y });
 	}
+
+	// create edges
+	for (int i = 0; i < size; i++)
+		edges.push_back((Edge){nullptr, nullptr, verticies[i], verticies[(i + 1) % size], back_verticies[i], back_verticies[(i + 1) % size]});
+
+	// connect edges
+	for (int i = 0; i < size; i++)
+	{
+		edges[i].right = &edges[(i + 1) % size];
+		edges[(i + 1) % size].left = &edges[i];
+	}
+
+	player.edge = &edges[0];
 }
 
 
 void Game::next_level()
 {
 	level_transition = 1; // start animation timer
-	projectiles.clear(); // delete all projectiles
-	spikes.clear(); // delete all spikes
-}
-
-
-void Game::handle_input()
-{
-	// move player left/right
-	if (IsKeyPressed(KEY_LEFT))
-		player.index = (player.index + 1) % points.size();
-	if (IsKeyPressed(KEY_RIGHT))
-		player.index = (player.index + points.size() - 1) % points.size();
-
-	// shoot
-	if (IsKeyPressed(KEY_SPACE))
-		projectiles.push_back((Object){player.index, player.position});
-}
-
-
-void Game::move_player(float delta_time)
-{
-	// target position
-	Vector2 target_pos;
-	target_pos.x = (points[player.index].x + points[(player.index + 1) % points.size()].x) / 2;
-	target_pos.y = (points[player.index].y + points[(player.index + 1) % points.size()].y) / 2;
-
-	// move player
-	player.position = Vector2Lerp(player.position, target_pos, delta_time * 10);
-	DrawCircleV(player.position, 10, YELLOW);
-}
-
-
-void Game::move_objects(float delta_time)
-{
-	// move projectiles
-	for (int i = 0; i < projectiles.size(); i++)
-	{
-		Vector2 target_pos;
-		target_pos.x = (far_points[projectiles[i].index].x + far_points[(projectiles[i].index + 1) % far_points.size()].x) / 2;
-		target_pos.y = (far_points[projectiles[i].index].y + far_points[(projectiles[i].index + 1) % far_points.size()].y) / 2;
-
-		projectiles[i].position = Vector2MoveTowards(projectiles[i].position, target_pos, delta_time * 300);
-		DrawCircleV(projectiles[i].position, 5, YELLOW);
-		
-		// destroy projectile
-		if (Vector2Distance(projectiles[i].position, target_pos) <= 20)
-			projectiles.erase(projectiles.begin() + i);
-		
-		// destroy spike on collision
-		for (int j = 0; j < spikes.size(); j++)
-		{
-			if (spikes[j].index == projectiles[i].index && Vector2Distance(spikes[j].position, projectiles[i].position) <= 20)
-			{
-				projectiles.erase(projectiles.begin() + i);
-				spikes.erase(spikes.begin() + j);
-				score += 100;
-				if (score % 1000 == 0)
-					next_level();
-			}
-		}
-	}
-
-	// generate spikes
-	if (GetRandomValue(0, 200) == 0)
-	{
-		int r = GetRandomValue(0, far_points.size() - 1);
-		Vector2 pos;
-		pos.x = (far_points[r].x + far_points[(r + 1) % far_points.size()].x) / 2;
-		pos.y = (far_points[r].y + far_points[(r + 1) % far_points.size()].y) / 2;
-	
-		spikes.push_back((Object){r, pos});
-	}
-
-	// move spikes
-	for (int i = 0; i < spikes.size(); i++)
-	{
-		Vector2 target_pos;
-		target_pos.x = (points[spikes[i].index].x + points[(spikes[i].index + 1) % points.size()].x) / 2;
-		target_pos.y = (points[spikes[i].index].y + points[(spikes[i].index + 1) % points.size()].y) / 2;
-
-		spikes[i].position = Vector2MoveTowards(spikes[i].position, target_pos, delta_time * 20);
-		DrawCircleV(spikes[i].position, 10, RED);
-		
-		if (Vector2Distance(spikes[i].position, target_pos) <= 20)
-		{
-			spikes.erase(spikes.begin() + i);
-			health--;
-		}
-	}
+	enemies.clear();
+	projectiles.clear();
 }
 
 
 void Game::transition(float delta_time)
 {
-	// if transition is not happening, return
-	if (level_transition <= 0)
-		return;
-
 	level_transition -= delta_time * 0.75;
 
 	// when animation ends, generate new level
@@ -137,53 +141,102 @@ void Game::transition(float delta_time)
 		generate();
 
 	// move everything on screen
-	for (Vector2 &point : points)
-		point = Vector2Lerp(point, Vector2Add(point, Vector2Subtract(point, offset)), delta_time * 4);
-	for (Vector2 &point : far_points)
-		point = Vector2Lerp(point, Vector2Add(point, Vector2Subtract(point, offset)), delta_time * 4);
+	for (Edge &edge : edges)
+	{
+		edge.A = Vector2Lerp(edge.A, Vector2Add(edge.A, Vector2Subtract(edge.A, offset)), delta_time * 4);
+		edge.B = Vector2Lerp(edge.B, Vector2Add(edge.B, Vector2Subtract(edge.B, offset)), delta_time * 4);
+		edge.A2 = Vector2Lerp(edge.A2, Vector2Add(edge.A2, Vector2Subtract(edge.A2, offset)), delta_time * 4);
+		edge.B2 = Vector2Lerp(edge.B2, Vector2Add(edge.B2, Vector2Subtract(edge.B2, offset)), delta_time * 4);
+	}
+	
+	draw();
 }
 
 
 void Game::draw()
 {
 	// draw normal lines
-	for (int i = 0; i < points.size(); i++)
+	for (Edge edge : edges)
 	{
-		DrawLineV(points[i], points[(i + 1) % points.size()], BLUE);
-		DrawLineV(far_points[i], far_points[(i + 1) % points.size()], BLUE);
-		DrawLineV(points[i], far_points[i], BLUE);
+		DrawLineV(edge.A, edge.B, BLUE);
+		DrawLineV(edge.A2, edge.B2, BLUE);
+		DrawLineV(edge.A, edge.A2, BLUE);
+		DrawLineV(edge.B, edge.B2, BLUE);
 	}
 
 	// draw highlighted lines
-	DrawLineV(points[player.index], points[(player.index + 1) % points.size()], YELLOW);
-	DrawLineV(far_points[player.index], far_points[(player.index + 1) % points.size()], YELLOW);
-	DrawLineV(points[player.index], far_points[player.index], YELLOW);
-	DrawLineV(points[(player.index + 1) % points.size()], far_points[(player.index + 1) % points.size()], YELLOW);
+	DrawLineV(player.edge->A, player.edge->B, YELLOW);
+	DrawLineV(player.edge->A2, player.edge->B2, YELLOW);
+	DrawLineV(player.edge->A, player.edge->A2, YELLOW);
+	DrawLineV(player.edge->B, player.edge->B2, YELLOW);
 }
 
 
 void Game::update(float delta_time)
 {
 	// level transition (if happening)
-	transition(delta_time);
+	if (level_transition > 0)
+	{
+		transition(delta_time);
+		return;
+	}
 
-	// handle input
-	handle_input();
+	// move player, projectiles and enemies
+	for (int i = 0; i < projectiles.size(); i++)
+	{
+		if (projectiles[i].update(delta_time))
+			projectiles.erase(projectiles.begin() + i);
+		for (int j = 0; j < enemies.size(); j++)
+		{
+			if (enemies[j].collide(projectiles[i].position, projectiles[i].radius))
+			{
+				enemies.erase(enemies.begin() + j);
+				projectiles.erase(projectiles.begin() + i);
+				score_points();
+			}
+		}
+	}
+	for (int i = 0; i < enemies.size(); i++)
+	{
+		if (enemies[i].update(delta_time))
+		{
+			enemies.erase(enemies.begin() + i);
+			lose_health();
+		}
+	}
+	player.update(delta_time);
 
-	// draw lines
+	// draw
 	draw();
-	
-	// handle player
-	move_player(delta_time);
 
-	// move projectiles and spikes
-	move_objects(delta_time);
+	// shoot
+	if (IsKeyPressed(KEY_SPACE))
+		projectiles.push_back(Projectile(player.edge, player.position, (float)400));
+	
+	// spawn enemies
+	if (GetRandomValue(0, 200 - score / 50) == 0)
+		enemies.push_back(Enemy(&edges[GetRandomValue(0, edges.size())], 50 + score / 50));
+}
+
+
+void Game::lose_health()
+{
+	health--;	
+}
+
+
+void Game::score_points()
+{
+	score += 100;
+	if (score % 1000 == 0)
+		next_level();
 }
 
 
 Game::Game(Vector2 c) : center(c)
 {
-	offset = Vector2Add(center, (Vector2){0, 100});
+	offset = Vector2Add(center, (Vector2){0, 20});
+	player = Player(nullptr);
 
 	generate();
 }

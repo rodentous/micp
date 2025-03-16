@@ -3,45 +3,83 @@
 
 
 
-struct Object
+struct Edge
 {
-	int index;
+	Edge *left, *right; // adjacent edges
+	Vector2 A, B, A2, B2; // points of the edge
+};
+
+
+class Object
+{
+public:
+	Edge* edge;
 	Vector2 position;
+	int radius;
+	int speed;
+
+	void update(float delta_time);
+
+	Object(Edge* e);
+};
+
+
+class Player : public Object
+{
+public:
+	int radius = 10;
+	Player(Edge* e);
+	void update(float delta_time);
+};
+
+
+class Projectile : public Object
+{
+public:
+	int radius = 5;
+	Projectile(Edge* e, Vector2 pos, int s);
+	bool update(float delta_time);
+};
+
+
+class Enemy : public Object
+{
+public:
+	int radius = 10;
+	Enemy(Edge* e, int s);
+	bool update(float delta_time);
+	bool collide(Vector2 pos, int r);
 };
 
 
 class Game
 {
-
 private:
-	std::vector<Vector2> points, far_points; // points of level
-	Vector2 center, offset; // coordinates of center/offset
-
-	Object player;
-	std::vector<Object> projectiles, spikes;
+	std::vector<Edge> edges;
+	
+	Player player = Player(nullptr);
+	std::vector<Enemy> enemies;
+	std::vector<Projectile> projectiles;
 
 	float level_transition = 0; // timer for level transition
-
-public:
-	int score = 0;
-	int health = 5;
-
+	
 	void generate();
-
-	void handle_input();
-
-	void move_player(float delta_time);
-
+	
 	void next_level();
-
+	
 	void transition(float delta_time);
-
-	void move_objects(float delta_time);
-
+	
 	void draw();
+	
+public:
+	Vector2 center, offset; // coordinates of center/offset
+	int score = 0, health = 5;
+
+	void lose_health();
+	
+	void score_points();
 
 	void update(float delta_time);
 
 	Game(Vector2 c);
-
 };

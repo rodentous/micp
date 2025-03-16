@@ -13,7 +13,8 @@
 		"cmath": "cpp",
 		"*.m": "cpp",
 		"xiosbase": "cpp",
-		"xstring": "cpp"
+		"xstring": "cpp",
+		"random": "cpp"
 	},
 	"C_Cpp.errorSquiggles": "disabled"
 }
