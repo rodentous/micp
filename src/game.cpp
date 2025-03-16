@@ -7,6 +7,8 @@
 
 Player::Player(Edge* e) : Object(e)
 {
+	radius = 10;
+
 	if (!edge)
 		return;
 	
@@ -38,6 +40,7 @@ Projectile::Projectile(Edge* e, Vector2 pos, int s) : Object(e)
 {
 	position = pos;
 	speed = s;
+	radius = 5;
 }
 
 
@@ -55,6 +58,8 @@ bool Projectile::update(float delta_time)
 
 Enemy::Enemy(Edge* e, int s) : Object(e)
 {
+	radius = 15;
+
 	if (!edge)
 		return;
 	
@@ -65,13 +70,26 @@ Enemy::Enemy(Edge* e, int s) : Object(e)
 }
 
 
-bool Enemy::update(float delta_time)
+void Enemy::update(float delta_time)
 {
+	Vector2 p1 = Vector2MoveTowards(position1, edge->A, radius), p2 = Vector2MoveTowards(position2, edge->B, radius), m1, m2;
+
+	DrawLineV(position1, p2, RED);
+	DrawLineV(position2, p1, RED);
+
+	if (GetRandomValue(0, 200))
+		edge = edge->left;
+	if (GetRandomValue(0, 200))
+		edge = edge->right;
+
+	if (Vector2Distance(p1, edge->A) < 1 || Vector2Distance(p2, edge->B) < 1)
+	{
+		edging = true;
+		return;
+	}
+
 	position1 = Vector2MoveTowards(position1, edge->A, delta_time * speed);
 	position2 = Vector2MoveTowards(position2, edge->B, delta_time * speed);
-	DrawLineV(position1, position2, RED);
-
-	return Vector2Distance(position1, edge->A) < 1;
 }
 
 
@@ -93,7 +111,7 @@ void Game::generate()
 	edges.clear();
 
 	// place points in regular polygon:
-	int size = score / 1000 + 4; // number of points
+	int size = score / 1000 + 10; // number of points
 	for (int i = 0; i < size; i++)
 	{
 		float x = (center.x + std::sin(360 / size * i * PI / 180) * 300);
@@ -182,6 +200,7 @@ void Game::update(float delta_time)
 	{
 		if (projectiles[i].update(delta_time))
 			projectiles.erase(projectiles.begin() + i);
+
 		for (int j = 0; j < enemies.size(); j++)
 		{
 			if (enemies[j].collide(projectiles[i].position, projectiles[i].radius))
@@ -194,10 +213,20 @@ void Game::update(float delta_time)
 	}
 	for (int i = 0; i < enemies.size(); i++)
 	{
-		if (enemies[i].update(delta_time))
+		enemies[i].update(delta_time);
+
+		if (enemies[i].edging && enemies[i].edge == player.edge)
 		{
 			enemies.erase(enemies.begin() + i);
 			lose_health();
+		}
+		for (int j = 0; j < enemies.size(); j++)
+		{
+			if (i != j && enemies[i].edging && enemies[j].edging && enemies[i].edge == enemies[j].edge)
+			{
+				enemies.erase(enemies.begin() + i);
+				enemies.erase(enemies.begin() + j);
+			}
 		}
 	}
 	player.update(delta_time);

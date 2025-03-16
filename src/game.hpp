@@ -16,6 +16,7 @@ public:
 	Edge* edge;
 	Vector2 position;
 	int speed;
+	int radius;
 
 	Object(Edge* e) : edge(e) {}
 	void update(float delta_time);
@@ -25,7 +26,6 @@ public:
 class Player : public Object
 {
 public:
-	int radius = 10;
 	Player(Edge* e);
 	void update(float delta_time);
 };
@@ -34,7 +34,6 @@ public:
 class Projectile : public Object
 {
 public:
-	int radius = 5;
 	Projectile(Edge* e, Vector2 pos, int s);
 	bool update(float delta_time);
 };
@@ -44,9 +43,10 @@ class Enemy : public Object
 {
 public:
 	Vector2 position1, position2;
+	bool edging;
 
 	Enemy(Edge* e, int s);
-	bool update(float delta_time);
+	void update(float delta_time);
 	bool collide(Vector2 pos, int r);
 };
 
