@@ -211,7 +211,7 @@ void Game::update(float delta_time)
 
 	// shoot
 	if (IsKeyPressed(KEY_SPACE))
-		projectiles.push_back(Projectile(player.edge, player.position, (float)400));
+		projectiles.push_back(Projectile(player.edge, player.position, 400));
 	
 	// spawn enemies
 	if (GetRandomValue(0, 200 - score / 50) == 0)
