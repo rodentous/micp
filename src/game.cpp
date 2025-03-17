@@ -102,10 +102,7 @@ void Enemy::update(float delta_time)
 
 	// is on outer vertex
 	if (Vector2Distance(position1, edge->A) < 1 || Vector2Distance(position2, edge->B) < 1)
-	{
 		edging = true;
-		return;
-	}
 
 	// move
 	position1 = Vector2MoveTowards(position1, edge->A, delta_time * speed);
@@ -212,6 +209,9 @@ void Game::update(float delta_time)
 		return;
 	}
 
+	// draw map
+	draw();
+
 	// move player, projectiles and enemies
 	player.update(delta_time);
 
@@ -236,7 +236,7 @@ void Game::update(float delta_time)
 	{
 		enemies[i].update(delta_time);
 
-		if (enemies[i].edging && enemies[i].edge == player.edge)
+		if (enemies[i].edging && enemies[i].collide(player.position, player.radius))
 		{
 			enemies.erase(enemies.begin() + i);
 			explosions.push_back(Explosion(player.edge, player.position, RED, 20));
@@ -250,8 +250,6 @@ void Game::update(float delta_time)
 			explosions.erase(explosions.begin() + i);
 	}
 
-	// draw
-	draw();
 
 	// input
 	if (IsKeyPressed(KEY_LEFT))
