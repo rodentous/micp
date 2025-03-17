@@ -71,6 +71,35 @@ Enemy::Enemy(Edge* e, int s) : Object(e)
 	position2 = edge->B2;
 }
 
+class Explosion {
+	public:
+		Vector2 position;
+		float lifetime; 
+	
+		Explosion(Vector2 pos) : position(pos), lifetime(0.1f) {}
+	
+		void update(float delta_time) {
+			lifetime -= delta_time;
+		}
+	
+		bool isAlive() const {
+			return lifetime > 0;
+		}
+
+		// draw a star-explosion
+		void draw() const {
+			DrawLineV(position, (Vector2){position.x - 10, position.y}, RED);
+			DrawLineV(position, (Vector2){position.x + 10, position.y}, RED);
+			DrawLineV(position, (Vector2){position.x, position.y - 10}, RED);
+			DrawLineV(position, (Vector2){position.x, position.y + 10}, RED);
+			DrawLineV(position, (Vector2){position.x - 7, position.y - 7}, RED);
+			DrawLineV(position, (Vector2){position.x + 7, position.y + 7}, RED);
+			DrawLineV(position, (Vector2){position.x - 7, position.y + 7}, RED);
+			DrawLineV(position, (Vector2){position.x + 7, position.y - 7}, RED);
+		}
+	};
+	
+
 void Enemy::update(float delta_time)
 {
 	// jump to adjacent edges
@@ -96,14 +125,16 @@ void Enemy::update(float delta_time)
 	position2 = Vector2MoveTowards(position2, edge->B, delta_time * speed);
 }
 
+std::vector<Explosion> explosions;
 
 bool Enemy::collide(Vector2 pos, int r)
 {
-	return CheckCollisionCircleLine(pos, r, position1, position2);
+    if (CheckCollisionCircleLine(pos, r, position1, position2)) {  // if killed
+        explosions.emplace_back((Explosion){(position1 + position2) / 2}); // create explosion
+        return true;
+    }
+    return false;
 }
-
-
-
 
 
 void Game::generate()
@@ -154,6 +185,7 @@ void Game::transition(float delta_time)
 {
 	level_transition -= delta_time * 0.9;
 
+	explosions.clear();
 	// when animation ends, generate new level
 	if (level_transition <= 1.1 && level_transition > 1)
 		generate();
@@ -234,6 +266,16 @@ void Game::update(float delta_time)
 		// 		enemies.erase(enemies.begin() + j);
 		// 	}
 		// }
+	}
+	// draw explosion
+	for (auto it = explosions.begin(); it != explosions.end();) {
+		it->update(delta_time);
+		if (!it->isAlive()) {
+			it = explosions.erase(it);
+		} else {
+			it->draw();
+			++it;
+		}
 	}
 
 	// draw
