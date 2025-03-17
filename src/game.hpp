@@ -62,6 +62,7 @@ private:
 	Player player = Player(nullptr);
 	std::vector<Enemy> enemies;
 	std::vector<Projectile> projectiles;
+	float level_transition = 0; // timer for level transition
 
 	void generate();
 	
@@ -70,7 +71,6 @@ private:
 	void draw();
 	
 public:
-	float level_transition = 0; // timer for level transition
 	Vector2 center, offset; // coordinates of center/offset
 	int score = 0, health = 5;
 

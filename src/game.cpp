@@ -1,4 +1,5 @@
 #include "game.hpp"
+
 #include "raymath.h"
 #include <cmath>
 #include <random>
@@ -8,14 +9,12 @@
 Player::Player(Edge* e) : Object(e)
 {
 	radius = 10;
+	speed = 10;
 
-	if (!edge)
-		return;
-	
+	if (!edge) return;
 	position.x = (edge->A.x + edge->B.x) / 2;
 	position.y = (edge->A.y + edge->B.y) / 2;
 }
-
 
 void Player::update(float delta_time)
 {
@@ -25,69 +24,74 @@ void Player::update(float delta_time)
 	if (IsKeyPressed(KEY_RIGHT))
 		edge = edge->right;
 
-	// target position
+	// calculate target position
 	Vector2 target_pos;
 	target_pos.x = (edge->A.x + edge->B.x) / 2;
 	target_pos.y = (edge->A.y + edge->B.y) / 2;
 
-	// move player
-	position = Vector2Lerp(position, target_pos, delta_time * 10);
+	// move and draw
+	position = Vector2Lerp(position, target_pos, delta_time * speed);
 	DrawCircleV(position, radius, YELLOW);
 }
 
 
+
 Projectile::Projectile(Edge* e, Vector2 pos, int s) : Object(e)
 {
-	position = pos;
-	speed = s;
 	radius = 5;
-}
+	speed = s;
 
+	position = pos;
+}
 
 bool Projectile::update(float delta_time)
 {
+	// calculate target position
 	Vector2 target_pos;
 	target_pos.x = (edge->A2.x + edge->B2.x) / 2;
 	target_pos.y = (edge->A2.y + edge->B2.y) / 2;
+
+	// move and draw
 	position = Vector2MoveTowards(position, target_pos, delta_time * speed);
 	DrawCircleV(position, radius, SKYBLUE);
 
+	// return true if projectile should be destroyed
 	return Vector2Distance(position, target_pos) < 1;
 }
+
 
 
 Enemy::Enemy(Edge* e, int s) : Object(e)
 {
 	radius = 15;
+	speed = s;
 
-	if (!edge)
-		return;
-	
+	if (!edge) return;
 	position1 = edge->A2;
 	position2 = edge->B2;
-
-	speed = s;
 }
-
 
 void Enemy::update(float delta_time)
 {
+	// jump to adjacent edges
+	if (GetRandomValue(0, 200))
+		edge = edge->left;
+	if (GetRandomValue(0, 200))
+		edge = edge->right;
+	
+	// draw lines
 	Vector2 p1 = Vector2MoveTowards(position1, edge->A, radius), p2 = Vector2MoveTowards(position2, edge->B, radius), m1, m2;
-
 	DrawLineV(position1, p2, RED);
 	DrawLineV(position2, p1, RED);
 
-	if (GetRandomValue(0, 100))
-		edge = edge->left;
-	if (GetRandomValue(0, 100))
-		edge = edge->right;
-
+	// is on outer vertex
 	if (Vector2Distance(p1, edge->A) < 1 || Vector2Distance(p2, edge->B) < 1)
 	{
 		edging = true;
 		return;
 	}
 
+	// move
 	position1 = Vector2MoveTowards(position1, edge->A, delta_time * speed);
 	position2 = Vector2MoveTowards(position2, edge->B, delta_time * speed);
 }
@@ -196,6 +200,8 @@ void Game::update(float delta_time)
 	}
 
 	// move player, projectiles and enemies
+	player.update(delta_time);
+
 	for (int i = 0; i < projectiles.size(); i++)
 	{
 		if (projectiles[i].update(delta_time))
@@ -229,7 +235,6 @@ void Game::update(float delta_time)
 			}
 		}
 	}
-	player.update(delta_time);
 
 	// draw
 	draw();
