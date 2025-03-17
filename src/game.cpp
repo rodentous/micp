@@ -64,7 +64,7 @@ Explosion::Explosion(Edge* e, Vector2 pos, Color c, int r) : Object(e)
 
 bool Explosion::update(float delta_time)
 {
-	lifetime -= delta_time;
+	lifetime -= delta_time * 2;
 	radius -= delta_time * 10;
 
 	DrawCircleV(position, radius, color);
@@ -93,12 +93,15 @@ void Enemy::update(float delta_time)
 		edge = edge->right;
 
 	// draw lines
-	Vector2 p1 = Vector2MoveTowards(position1, edge->A, radius), p2 = Vector2MoveTowards(position2, edge->B, radius), m1, m2;
-	DrawLineV(position1, p2, RED);
-	DrawLineV(position2, p1, RED);
+	// Vector2 p1 = Vector2MoveTowards(position1, edge->A, radius), p2 = Vector2MoveTowards(position2, edge->B, radius), m1, m2;
+	DrawLineV(position1, position2, RED);
+	DrawCircleV(position1, 5, RED);
+	DrawCircleV(position2, 5, RED);
+	// DrawLineV(p1, p2, RED);
+	
 
 	// is on outer vertex
-	if (Vector2Distance(p1, edge->A) < 1 || Vector2Distance(p2, edge->B) < 1)
+	if (Vector2Distance(position1, edge->A) < 1 || Vector2Distance(position2, edge->B) < 1)
 	{
 		edging = true;
 		return;
