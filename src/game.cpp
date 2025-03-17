@@ -243,14 +243,6 @@ void Game::update(float delta_time)
 			PlaySound(hurt_sound);
 			lose_health();
 		}
-		for (int j = 0; j < enemies.size(); j++)
-		{
-			if (i != j && enemies[i].edging && enemies[j].edging && enemies[i].edge == enemies[j].edge)
-			{
-				enemies.erase(enemies.begin() + i);
-				enemies.erase(enemies.begin() + j);
-			}
-		}
 	}
 	for (int i = 0; i < explosions.size(); i++)
 	{
