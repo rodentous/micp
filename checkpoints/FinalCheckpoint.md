@@ -45,8 +45,10 @@
 + developer peasant ( помощник осуществления "сложность и объем кода")
 ## 6. Экстра баллы
 ### Мы хотим экстра баллы за невероятную архитектуру кода
-## 6. Формат выполнения
+## 7. Формат выполнения
 **Github** - https://github.com/rodentous/micp
 
-## 7. Стек выполнения
+## 8. Стек выполнения
 Raylib, Cmath, Random
+## 9. Презентация 
+https://docs.google.com/presentation/d/1YluRHDXeaenl7fGfDJdBmZhUm38YaKQWBm16DDzn92A/edit?usp=sharing
