@@ -18,12 +18,6 @@ Player::Player(Edge* e) : Object(e)
 
 void Player::update(float delta_time)
 {
-	// move player left/right
-	if (IsKeyPressed(KEY_LEFT))
-		edge = edge->left;
-	if (IsKeyPressed(KEY_RIGHT))
-		edge = edge->right;
-
 	// calculate target position
 	Vector2 target_pos;
 	target_pos.x = (edge->A.x + edge->B.x) / 2;
@@ -60,6 +54,24 @@ bool Projectile::update(float delta_time)
 }
 
 
+Explosion::Explosion(Edge* e, Vector2 pos, Color c, int r) : Object(e)
+{
+	radius = r;
+	color = c;
+	lifetime = 1;
+	position = pos;
+}
+
+bool Explosion::update(float delta_time)
+{
+	lifetime -= delta_time;
+	radius -= delta_time * 10;
+
+	DrawCircleV(position, radius, color);
+
+	return lifetime < 0;
+}
+
 
 Enemy::Enemy(Edge* e, int s) : Object(e)
 {
@@ -71,34 +83,6 @@ Enemy::Enemy(Edge* e, int s) : Object(e)
 	position2 = edge->B2;
 }
 
-class Explosion {
-	public:
-		Vector2 position;
-		float lifetime; 
-	
-		Explosion(Vector2 pos) : position(pos), lifetime(0.1f) {}
-	
-		void update(float delta_time) {
-			lifetime -= delta_time;
-		}
-	
-		bool isAlive() const {
-			return lifetime > 0;
-		}
-
-		// draw a star-explosion
-		void draw() const {
-			DrawLineV(position, (Vector2){position.x - 10, position.y}, RED);
-			DrawLineV(position, (Vector2){position.x + 10, position.y}, RED);
-			DrawLineV(position, (Vector2){position.x, position.y - 10}, RED);
-			DrawLineV(position, (Vector2){position.x, position.y + 10}, RED);
-			DrawLineV(position, (Vector2){position.x - 7, position.y - 7}, RED);
-			DrawLineV(position, (Vector2){position.x + 7, position.y + 7}, RED);
-			DrawLineV(position, (Vector2){position.x - 7, position.y + 7}, RED);
-			DrawLineV(position, (Vector2){position.x + 7, position.y - 7}, RED);
-		}
-	};
-	
 
 void Enemy::update(float delta_time)
 {
@@ -107,7 +91,7 @@ void Enemy::update(float delta_time)
 		edge = edge->left;
 	if (GetRandomValue(0, 200))
 		edge = edge->right;
-	
+
 	// draw lines
 	Vector2 p1 = Vector2MoveTowards(position1, edge->A, radius), p2 = Vector2MoveTowards(position2, edge->B, radius), m1, m2;
 	DrawLineV(position1, p2, RED);
@@ -125,15 +109,9 @@ void Enemy::update(float delta_time)
 	position2 = Vector2MoveTowards(position2, edge->B, delta_time * speed);
 }
 
-std::vector<Explosion> explosions;
-
 bool Enemy::collide(Vector2 pos, int r)
 {
-    if (CheckCollisionCircleLine(pos, r, position1, position2)) {  // if killed
-        explosions.emplace_back((Explosion){(position1 + position2) / 2}); // create explosion
-        return true;
-    }
-    return false;
+    return CheckCollisionCircleLine(pos, r, position1, position2);
 }
 
 
@@ -198,7 +176,7 @@ void Game::transition(float delta_time)
 		edge.A2 = Vector2Lerp(edge.A2, Vector2Add(edge.A2, Vector2Subtract(edge.A2, center)), delta_time * 4);
 		edge.B2 = Vector2Lerp(edge.B2, Vector2Add(edge.B2, Vector2Subtract(edge.B2, center)), delta_time * 4);
 	}
-	
+
 	draw();
 }
 
@@ -245,6 +223,8 @@ void Game::update(float delta_time)
 			{
 				enemies.erase(enemies.begin() + j);
 				projectiles.erase(projectiles.begin() + i);
+				explosions.push_back(Explosion(projectiles[i].edge, projectiles[i].position, SKYBLUE, 10));
+				PlaySound(boom_sound);
 				score_points();
 			}
 		}
@@ -256,6 +236,8 @@ void Game::update(float delta_time)
 		if (enemies[i].edging && enemies[i].edge == player.edge)
 		{
 			enemies.erase(enemies.begin() + i);
+			explosions.push_back(Explosion(player.edge, player.position, RED, 20));
+			PlaySound(hurt_sound);
 			lose_health();
 		}
 		// for (int j = 0; j < enemies.size(); j++)
@@ -267,24 +249,32 @@ void Game::update(float delta_time)
 		// 	}
 		// }
 	}
-	// draw explosion
-	for (auto it = explosions.begin(); it != explosions.end();) {
-		it->update(delta_time);
-		if (!it->isAlive()) {
-			it = explosions.erase(it);
-		} else {
-			it->draw();
-			++it;
-		}
+	for (int i = 0; i < explosions.size(); i++)
+	{
+		if (explosions[i].update(delta_time))
+			explosions.erase(explosions.begin() + i);
 	}
 
 	// draw
 	draw();
 
-	// shoot
+	// input
+	if (IsKeyPressed(KEY_LEFT))
+	{
+		player.edge = player.edge->left;
+		PlaySound(move_sound);
+	}
+	if (IsKeyPressed(KEY_RIGHT))
+	{
+		player.edge = player.edge->right;
+		PlaySound(move_sound);
+	}
 	if (IsKeyPressed(KEY_SPACE))
+	{
 		projectiles.push_back(Projectile(player.edge, player.position, 400));
-	
+		PlaySound(shot_sound);
+	}
+
 	// spawn enemies
 	if (GetRandomValue(0, 200 - score / 50) == 0)
 		enemies.push_back(Enemy(&edges[GetRandomValue(0, edges.size() - 1)], 50 + score / 50));
@@ -293,7 +283,7 @@ void Game::update(float delta_time)
 
 void Game::lose_health()
 {
-	health--;	
+	health--;
 }
 
 
@@ -309,6 +299,11 @@ Game::Game(Vector2 c) : center(c)
 {
 	offset = Vector2Add(center, (Vector2){0, -5});
 	player = Player(nullptr);
+
+	move_sound = LoadSound("sounds/move.wav");
+	shot_sound = LoadSound("sounds/shot.wav");
+	boom_sound = LoadSound("sounds/boom.wav");
+	hurt_sound = LoadSound("sounds/hurt.wav");
 
 	generate();
 }

@@ -42,6 +42,16 @@ public:
 };
 
 
+class Explosion : public Object
+{
+public:
+	float lifetime;
+	Color color;
+	Explosion(Edge* e, Vector2 pos, Color c, int r);
+	bool update(float delta_time);
+};
+
+
 class Enemy : public Object
 {
 public:
@@ -62,7 +72,10 @@ private:
 	Player player = Player(nullptr);
 	std::vector<Enemy> enemies;
 	std::vector<Projectile> projectiles;
+	std::vector<Explosion> explosions;
+
 	float level_transition = 0; // timer for level transition
+	Sound move_sound, shot_sound, boom_sound, hurt_sound;
 
 	void generate();
 	

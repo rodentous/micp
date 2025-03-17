@@ -10,6 +10,7 @@ int main ()
 
 	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
 	InitWindow(width, height, "tempest");
+	InitAudioDevice();
 
 	Game game = Game((Vector2){width / 2, height / 2});
 
