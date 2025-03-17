@@ -61,6 +61,8 @@ int main ()
 		ClearBackground(BLACK);
 
 		DrawText("GAME OVER\n --press enter--", 10, 10, 25, WHITE);
+		DrawText(TextFormat("SCORE: %d", game.score), 10, 70, 25, WHITE);
+		DrawText(TextFormat("HIGH SCORE: %d", HIGH_SCORE), 10, 100, 25, WHITE);
 		
 		if (IsKeyPressed(KEY_ENTER))
 		{
