@@ -68,7 +68,7 @@ class Game
 {
 private:
 	std::vector<Edge> edges;
-	
+
 	Player player = Player(nullptr);
 	std::vector<Enemy> enemies;
 	std::vector<Projectile> projectiles;
@@ -78,19 +78,19 @@ private:
 	Sound move_sound, shot_sound, boom_sound, hurt_sound;
 
 	void generate();
-	
+
 	void transition(float delta_time);
-	
+
 	void draw();
-	
+
 public:
 	Vector2 center, offset; // coordinates of center/offset
 	int score = 0, health = 5;
 
 	void next_level();
-	
+
 	void lose_health();
-	
+
 	void score_points();
 
 	void update(float delta_time);
