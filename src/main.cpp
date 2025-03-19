@@ -9,6 +9,7 @@ int main ()
 	constexpr int width = 1000, height = 800;
 
 	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
+	SetTargetFPS(60);
 	InitWindow(width, height, "tempest");
 	InitAudioDevice();
 
@@ -17,10 +18,12 @@ int main ()
 		Main, Gameplay, Over
 	};
 	State state = State::Main;
+	RenderTexture2D target = LoadRenderTexture(width, height);
+	Shader bloom = LoadShader(0, "src/bloom.fs");
 
 	while (!WindowShouldClose())
 	{
-		BeginDrawing();
+		BeginTextureMode(target);
 		ClearBackground(BLACK);
 
 		switch (state)
@@ -28,7 +31,7 @@ int main ()
 			case Main:
 			{
 				DrawText("TEMPEST\n --press enter to start--", 10, 10, 25, WHITE);
-				
+
 				if (IsKeyPressed(KEY_ENTER))
 					state = State::Gameplay;
 			} break;
@@ -40,7 +43,7 @@ int main ()
 					if (game.score > HIGH_SCORE) HIGH_SCORE = game.score;
 					state = State::Over;
 				}
-		
+
 				DrawText(TextFormat("SCORE: %d", game.score), 10, 10, 25, WHITE);
 				DrawText(TextFormat("HIGH SCORE: %d", HIGH_SCORE), 10, 40, 25, WHITE);
 				DrawText(TextFormat("HP: %d", game.health), 10, 70, 25, WHITE);
@@ -50,7 +53,7 @@ int main ()
 				DrawText("GAME OVER\n --press enter--", 10, 10, 25, WHITE);
 				DrawText(TextFormat("SCORE: %d", game.score), 10, 70, 25, WHITE);
 				DrawText(TextFormat("HIGH SCORE: %d", HIGH_SCORE), 10, 100, 25, WHITE);
-				
+
 				if (IsKeyPressed(KEY_ENTER))
 				{
 					game = Game((Vector2){width / 2, height / 2});
@@ -60,6 +63,13 @@ int main ()
 			default: break;
 		}
 
+		EndTextureMode();
+
+		BeginDrawing();
+			ClearBackground(BLACK);
+			BeginShaderMode(bloom);
+			DrawTextureRec(target.texture, (Rectangle){ 0, 0, (float)target.texture.width, (float)-target.texture.height }, (Vector2){ 0, 0 }, WHITE);
+			EndShaderMode();
 		EndDrawing();
 	}
 
