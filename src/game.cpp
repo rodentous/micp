@@ -123,7 +123,7 @@ void Game::generate()
 	level_transition = 0.5;
 
 	// place points in regular polygon:
-	int size = score / 1000 + 10; // number of points
+	int size = score / 1000 + 3; // number of points
 	for (int i = 0; i < size; i++)
 	{
 		float x = (center.x + std::sin(DEG2RAD * 360 / size * i) * 30);

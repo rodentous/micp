@@ -86,7 +86,7 @@ private:
 
 public:
 	Vector2 center, offset; // coordinates of center/offset
-	int score = 0, health = 5;
+	int score = 0, health = 3;
 
 	void next_level();
 

@@ -6,7 +6,7 @@ int HIGH_SCORE = 0;
 
 int main ()
 {
-	int width = 1920, height = 1080;
+	float width = 1920, height = 1080;
 
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
 	SetTargetFPS(60);
@@ -31,7 +31,7 @@ int main ()
 			case Main:
 			{
 				Vector2 title = (Vector2){width / 2, height / 4};
-				Rectangle button = (Rectangle){width / 2 - 200, height / 1.5, 400, 100};
+				Rectangle button = (Rectangle){width / 2 - 200, height / 1.5f, 400, 100};
 
 				int size = 10;
 				for (int i = size - 1; i >= 0; i--)
@@ -57,7 +57,7 @@ int main ()
 				}
 
 				DrawText("MADE BY :(){ :|:& };: TEAM", 10, height-210, 50, WHITE);
-				DrawText("HEAD - YULIA", 10, height-140, 50, WHITE);
+				DrawText("HEAD - JULIA", 10, height-140, 50, WHITE);
 				DrawText("DEVELOPERS - ANNA, MARK", 10, height-70, 50, WHITE);
 			} break;
 			case Gameplay:
@@ -71,12 +71,13 @@ int main ()
 
 				DrawText(TextFormat("SCORE: %d", game.score), 10, 10, 50, WHITE);
 				DrawText(TextFormat("HIGH SCORE: %d", HIGH_SCORE), 10, 80, 50, WHITE);
-				DrawText(TextFormat("HP: %d", game.health), 10, 150, 50, WHITE);
+				for (int i = 0; i < game.health; i++)
+					DrawText("#", 10 + 50 * i, 150, 50, RED);
 			} break;
 			case Over:
 			{
 				Vector2 title = (Vector2){width / 2, height / 4};
-				Rectangle button = (Rectangle){width / 2 - 200, height / 1.5, 400, 100};
+				Rectangle button = (Rectangle){width / 2 - 200, height / 1.5f, 400, 100};
 
 				int size = 10;
 				for (int i = size - 1; i >= 0; i--)
