@@ -118,26 +118,11 @@ void Game::generate()
 	// reset everything
 	edges.clear();
 	level_transition = 0.5;
-	int size = 0;
+	int size = score / 1000 + 5; // number of points
 
-	// place points in regular polygon:
-	if (GetRandomValue(0, 1))
+	// star
+	if (score / 1000 % 2 == 1)
 	{
-		size = score / 1000 + 5; // number of points
-		for (int i = 0; i < size; i++)
-		{
-			float x = (center.x + std::sin(DEG2RAD * 360 / size * i) * 40);
-			float y = (center.y - std::cos(DEG2RAD * 360 / size * i) * 40);
-			verticies.push_back((Vector2){ x, y });
-
-			x = (offset.x + std::sin(DEG2RAD * 360 / size * i) * 4);
-			y = (offset.y - std::cos(DEG2RAD * 360 / size * i) * 4);
-			inner_verticies.push_back((Vector2){ x, y });
-		}
-	}
-	else
-	{
-		size = (score / 1000 + 2) * 2;
 		for (int i = 0; i < size; i++)
 		{
 			float angle = DEG2RAD * 360.0f / size * i;
@@ -153,6 +138,34 @@ void Game::generate()
 			x = offset.x + sin(angle) * inner_radius;
 			y = offset.y - cos(angle) * inner_radius;
 			inner_verticies.push_back((Vector2){x, y});
+		}
+	}
+	// regular polygon
+	else if (GetRandomValue(0, 1) == 0)
+	{
+		for (int i = 0; i < size; i++)
+		{
+			float x = (center.x + std::sin(DEG2RAD * 360 / size * i) * 40);
+			float y = (center.y - std::cos(DEG2RAD * 360 / size * i) * 40);
+			verticies.push_back((Vector2){ x, y });
+
+			x = (offset.x + std::sin(DEG2RAD * 360 / size * i) * 4);
+			y = (offset.y - std::cos(DEG2RAD * 360 / size * i) * 4);
+			inner_verticies.push_back((Vector2){ x, y });
+		}
+	}
+	// TODO: square
+	else
+	{
+		for (int i = 0; i < size; i++)
+		{
+			float x = (center.x + std::sin(DEG2RAD * 360 / size * i) * 40);
+			float y = (center.y - std::cos(DEG2RAD * 360 / size * i) * 40);
+			verticies.push_back((Vector2){ x, y });
+
+			x = (offset.x + std::sin(DEG2RAD * 360 / size * i) * 4);
+			y = (offset.y - std::cos(DEG2RAD * 360 / size * i) * 4);
+			inner_verticies.push_back((Vector2){ x, y });
 		}
 	}
 

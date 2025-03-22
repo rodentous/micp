@@ -8,7 +8,7 @@ int main ()
 {
 	float width = 1920, height = 1080;
 
-	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+	SetConfigFlags(FLAG_WINDOW_MAXIMIZED | FLAG_WINDOW_RESIZABLE);
 	SetTargetFPS(120);
 	InitWindow(width, height, "tempest");
 	InitAudioDevice();
