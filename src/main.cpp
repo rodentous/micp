@@ -30,28 +30,35 @@ int main ()
 		{
 			case Main:
 			{
-				Vector2 title = (Vector2){width / 2 - 260, height / 4};
+				Vector2 title = (Vector2){width / 2, height / 4};
 				Rectangle button = (Rectangle){width / 2 - 200, height / 1.5, 400, 100};
 
 				int size = 10;
 				for (int i = size - 1; i >= 0; i--)
 				{
-					Vector2 pos = Vector2Add(title, Vector2Scale(Vector2Subtract(Vector2Add(GetMousePosition(), (Vector2){-700, -20}), title), 0.1 / size * i));
-					DrawText("TEMPEST", pos.x - i*20, pos.y - i*5, 100 + i*10, i == 0 ? BLACK : i != size - 1 ? ColorAlpha(WHITE, 1.0 / size * (size - i)) : RED);
+					float text_width = MeasureText("TEMPEST", 100 + i*10);
+					Vector2 pos = Vector2Add(title, Vector2Scale(Vector2Subtract(GetMousePosition(), Vector2Add(title, (Vector2){-2*text_width, 0})), 0.1 / size * i));
+					DrawText("TEMPEST", pos.x - i*20 - text_width/2, pos.y - i*5, 100 + i*10, i == 0 ? BLACK : i != size - 1 ? ColorAlpha(WHITE, 1.0 / size * (size - i)) : RED);
 				}
 
 				if (CheckCollisionPointRec(GetMousePosition(), button))
 				{
 					DrawRectangleRounded(button, 0.1, 10, WHITE);
-					DrawText("START", button.x + 110, button.y + 30, 50, BLACK);
+					float text_width = MeasureText("START", 50);
+					DrawText("START", button.x + button.width/2 - text_width/2, button.y + 30, 50, BLACK);
 					if (IsMouseButtonPressed(0))
 						state = State::Gameplay;
 				}
 				else
 				{
 					DrawRectangleRoundedLines(button, 0.1, 10, WHITE);
-					DrawText("START", button.x + 110, button.y + 30, 50, WHITE);
+					float text_width = MeasureText("START", 50);
+					DrawText("START", button.x + button.width/2 - text_width/2, button.y + 30, 50, WHITE);
 				}
+
+				DrawText("MADE BY :(){ :|:& };: TEAM", 10, height-210, 50, WHITE);
+				DrawText("HEAD - YULIA", 10, height-140, 50, WHITE);
+				DrawText("DEVELOPERS - ANNA, MARK", 10, height-70, 50, WHITE);
 			} break;
 			case Gameplay:
 			{
@@ -68,20 +75,22 @@ int main ()
 			} break;
 			case Over:
 			{
-				Vector2 title = (Vector2){width / 2 - 290, height / 4};
+				Vector2 title = (Vector2){width / 2, height / 4};
 				Rectangle button = (Rectangle){width / 2 - 200, height / 1.5, 400, 100};
 
 				int size = 10;
 				for (int i = size - 1; i >= 0; i--)
 				{
-					Vector2 pos = Vector2Add(title, Vector2Scale(Vector2Subtract(Vector2Add(GetMousePosition(), (Vector2){-1300, -20}), title), 0.1 / size * i));
-					DrawText("GAME OVER", pos.x - i*20, pos.y - i*5, 100 + i*10, i == 0 ? BLACK : i != size - 1 ? ColorAlpha(WHITE, 1.0 / size * (size - i)) : RED);
+					float text_width = MeasureText("GAME OVER", 100 + i*10);
+					Vector2 pos = Vector2Add(title, Vector2Scale(Vector2Subtract(GetMousePosition(), Vector2Add(title, (Vector2){-2*text_width, 0})), 0.1 / size * i));
+					DrawText("GAME OVER", pos.x - i*20 - text_width/2, pos.y - i*5, 100 + i*10, i == 0 ? BLACK : i != size - 1 ? ColorAlpha(WHITE, 1.0 / size * (size - i)) : RED);
 				}
 
 				if (CheckCollisionPointRec(GetMousePosition(), button))
 				{
 					DrawRectangleRounded(button, 0.1, 10, WHITE);
-					DrawText("RESTART", button.x + 80, button.y + 30, 50, BLACK);
+					float text_width = MeasureText("RESTART", 50);
+					DrawText("RESTART", button.x + button.width/2 - text_width/2, button.y + 30, 50, BLACK);
 					if (IsMouseButtonPressed(0))
 					{
 						state = State::Main;
@@ -91,7 +100,8 @@ int main ()
 				else
 				{
 					DrawRectangleRoundedLines(button, 0.1, 10, WHITE);
-					DrawText("RESTART", button.x + 80, button.y + 30, 50, WHITE);
+					float text_width = MeasureText("RESTART", 50);
+					DrawText("RESTART", button.x + button.width/2 - text_width/2, button.y + 30, 50, WHITE);
 				}
 			} break;
 			default: break;
