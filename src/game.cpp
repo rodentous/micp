@@ -59,6 +59,7 @@ Explosion::Explosion(Edge* e, Vector2 pos, Color c, int r) : Object(e)
 	color = c;
 	lifetime = 1;
 	position = pos;
+	speed = 0;
 }
 
 bool Explosion::update(float delta_time)
@@ -80,15 +81,18 @@ Enemy::Enemy(Edge* e, int s) : Object(e)
 	if (!edge) return;
 	position1 = edge->A2;
 	position2 = edge->B2;
+	position = Vector2Zero();
+	edging = false;
 }
 
 
 void Enemy::update(float delta_time)
 {
+	// if (Vector2Scale(Vector2Subtract(edge->A2, edge->A), ))
 	// jump to adjacent edges
-	if (GetRandomValue(0, 200))
+	if (GetRandomValue(0, 400))
 		edge = edge->left;
-	if (GetRandomValue(0, 200))
+	if (GetRandomValue(0, 400))
 		edge = edge->right;
 
 	// draw lines
@@ -129,14 +133,14 @@ void Game::generate()
 
 			// outer verticies
 			float outer_radius = (i % 2 == 0) ? 40.0f : 20.0f;
-			float x = center.x + sin(angle) * outer_radius;
-			float y = center.y - cos(angle) * outer_radius;
+			float x = offset.x + sin(angle) * outer_radius;
+			float y = offset.y - cos(angle) * outer_radius;
 			verticies.push_back((Vector2){x, y});
 
 			// inner verticies
 			float inner_radius = (i % 2 == 0) ? 4.0f : 2.0f;
-			x = offset.x + sin(angle) * inner_radius;
-			y = offset.y - cos(angle) * inner_radius;
+			x = center.x + sin(angle) * inner_radius;
+			y = center.y - cos(angle) * inner_radius;
 			inner_verticies.push_back((Vector2){x, y});
 		}
 	}
@@ -145,12 +149,12 @@ void Game::generate()
 	{
 		for (int i = 0; i < size; i++)
 		{
-			float x = (center.x + std::sin(DEG2RAD * 360 / size * i) * 40);
-			float y = (center.y - std::cos(DEG2RAD * 360 / size * i) * 40);
+			float x = (offset.x + std::sin(DEG2RAD * 360 / size * i) * 40);
+			float y = (offset.y - std::cos(DEG2RAD * 360 / size * i) * 40);
 			verticies.push_back((Vector2){ x, y });
 
-			x = (offset.x + std::sin(DEG2RAD * 360 / size * i) * 4);
-			y = (offset.y - std::cos(DEG2RAD * 360 / size * i) * 4);
+			x = (center.x + std::sin(DEG2RAD * 360 / size * i) * 4);
+			y = (center.y - std::cos(DEG2RAD * 360 / size * i) * 4);
 			inner_verticies.push_back((Vector2){ x, y });
 		}
 	}
@@ -159,12 +163,12 @@ void Game::generate()
 	{
 		for (int i = 0; i < size; i++)
 		{
-			float x = (center.x + std::sin(DEG2RAD * 360 / size * i) * 40);
-			float y = (center.y - std::cos(DEG2RAD * 360 / size * i) * 40);
+			float x = (offset.x + std::sin(DEG2RAD * 360 / size * i) * 40);
+			float y = (offset.y - std::cos(DEG2RAD * 360 / size * i) * 40);
 			verticies.push_back((Vector2){ x, y });
 
-			x = (offset.x + std::sin(DEG2RAD * 360 / size * i) * 4);
-			y = (offset.y - std::cos(DEG2RAD * 360 / size * i) * 4);
+			x = (center.x + std::sin(DEG2RAD * 360 / size * i) * 4);
+			y = (center.y - std::cos(DEG2RAD * 360 / size * i) * 4);
 			inner_verticies.push_back((Vector2){ x, y });
 		}
 	}
@@ -179,7 +183,7 @@ void Game::generate()
 		edges[i].right = &edges[(i + 1) % size];
 		edges[(i + 1) % size].left = &edges[i];
 	}
-	player.edge = &edges[0];
+	player.edge = &edges[size/2];
 }
 
 
@@ -205,18 +209,20 @@ void Game::transition(float delta_time)
 	{
 		edge.A = Vector2Lerp(edge.A, Vector2Add(edge.A, Vector2Subtract(edge.A, offset)), delta_time * 4);
 		edge.B = Vector2Lerp(edge.B, Vector2Add(edge.B, Vector2Subtract(edge.B, offset)), delta_time * 4);
-		edge.A2 = Vector2Lerp(edge.A2, Vector2Add(edge.A2, Vector2Subtract(edge.A2, offset)), delta_time * 4);
-		edge.B2 = Vector2Lerp(edge.B2, Vector2Add(edge.B2, Vector2Subtract(edge.B2, offset)), delta_time * 4);
+		edge.A2 = Vector2Lerp(edge.A2, Vector2Add(edge.A2, Vector2Subtract(edge.A2, center)), delta_time * 4);
+		edge.B2 = Vector2Lerp(edge.B2, Vector2Add(edge.B2, Vector2Subtract(edge.B2, center)), delta_time * 4);
+		DrawLineV(edge.A, edge.B, BLUE);
+		DrawLineV(edge.A2, edge.B2, BLUE);
+		DrawLineV(edge.A, edge.A2, BLUE);
+		DrawLineV(edge.B, edge.B2, BLUE);
 	}
-
-	draw();
 }
 
 
 void Game::draw()
 {
 	// draw normal lines
-	for (Edge edge : edges)
+	for (Edge &edge : edges)
 	{
 		DrawLineV(edge.A, edge.B, BLUE);
 		DrawLineV(edge.A2, edge.B2, BLUE);
@@ -243,6 +249,14 @@ void Game::update(float delta_time)
 
 	// draw map
 	draw();
+
+	//
+	Vector2 new_offset = Vector2Add(offset, Vector2Scale(Vector2Subtract(player.position, offset), 0.1));
+	for (Edge &edge : edges)
+	{
+		edge.A = Vector2Add(new_offset, Vector2Scale(Vector2Subtract(edge.A2, offset), 10));
+		edge.B = Vector2Add(new_offset, Vector2Scale(Vector2Subtract(edge.B2, offset), 10));
+	}
 
 	// move player, projectiles and enemies
 	player.update(delta_time);
@@ -294,6 +308,10 @@ void Game::update(float delta_time)
 	{
 		projectiles.push_back(Projectile(player.edge, player.position, 500));
 		PlaySound(shot_sound);
+	}
+	if (IsKeyPressed(KEY_BACKSPACE))
+	{
+		next_level();
 	}
 
 	// spawn enemies
