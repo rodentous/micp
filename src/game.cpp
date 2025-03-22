@@ -329,6 +329,7 @@ Game::Game(Vector2 c) : center(c)
 
 	move_sound = LoadSound("sounds/move.wav");
 	shot_sound = LoadSound("sounds/shot.wav");
+	SetSoundVolume(shot_sound, 0.25);
 	boom_sound = LoadSound("sounds/boom.wav");
 	hurt_sound = LoadSound("sounds/hurt.wav");
 	SetSoundVolume(hurt_sound, 5);

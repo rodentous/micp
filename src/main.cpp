@@ -1,11 +1,18 @@
 #include "game.hpp"
+#include <string>
+#include <fstream>
 
 
 
-int HIGH_SCORE = 0;
+#define DATA "data.lol"
+
+static void SaveScore(int value);
+static int LoadScore();
 
 int main ()
 {
+	int HIGH_SCORE = LoadScore();
+
 	float width = 1920, height = 1080;
 
 	SetConfigFlags(FLAG_WINDOW_MAXIMIZED | FLAG_WINDOW_RESIZABLE);
@@ -55,17 +62,22 @@ int main ()
 					float text_width = MeasureText("START", 50);
 					DrawText("START", button.x + button.width/2 - text_width/2, button.y + 30, 50, WHITE);
 				}
+				DrawText(TextFormat("HIGH SCORE: %d", HIGH_SCORE), 10, 10, 50, WHITE);
 
 				DrawText("MADE BY :(){ :|:& };: TEAM", 10, height-210, 50, WHITE);
 				DrawText("HEAD - JULIA", 10, height-140, 50, WHITE);
-				DrawText("DEVELOPERS - ANNA, MARK", 10, height-70, 50, WHITE);
+				DrawText("DEVELOPERS - MARK, ANNA", 10, height-70, 50, WHITE);
 			} break;
 			case Gameplay:
 			{
 				game.update(GetFrameTime());
 				if (game.health <= 0)
 				{
-					if (game.score > HIGH_SCORE) HIGH_SCORE = game.score;
+					if (game.score > HIGH_SCORE)
+					{
+						HIGH_SCORE = game.score;
+						SaveScore(HIGH_SCORE);
+					}
 					state = State::Over;
 				}
 
@@ -104,6 +116,7 @@ int main ()
 					float text_width = MeasureText("RESTART", 50);
 					DrawText("RESTART", button.x + button.width/2 - text_width/2, button.y + 30, 50, WHITE);
 				}
+				DrawText(TextFormat("SCORE: %d", game.score), 10, 10, 50, WHITE);
 			} break;
 			default: break;
 		}
@@ -121,4 +134,53 @@ int main ()
 	CloseWindow();
 	CloseAudioDevice();
 	return 0;
+}
+
+
+
+void SaveScore(int value)
+{
+    int dataSize = 0;
+    unsigned int newDataSize = 0;
+    unsigned char *fileData = LoadFileData(DATA, &dataSize);
+    unsigned char *newFileData = NULL;
+
+    if (fileData != NULL)
+    {
+		newFileData = fileData;
+		newDataSize = dataSize;
+
+		int *dataPtr = (int *)newFileData;
+		dataPtr[0] = value;
+
+        SaveFileData(DATA, newFileData, newDataSize);
+        RL_FREE(newFileData);
+    }
+	else
+    {
+        dataSize = sizeof(int);
+        fileData = (unsigned char *)RL_MALLOC(dataSize);
+        int *dataPtr = (int *)fileData;
+        dataPtr[0] = value;
+
+        SaveFileData(DATA, fileData, dataSize);
+        UnloadFileData(fileData);
+    }
+}
+
+int LoadScore()
+{
+    int value = 0;
+    int dataSize = 0;
+    unsigned char *fileData = LoadFileData(DATA, &dataSize);
+
+    if (fileData != NULL)
+    {
+		int *dataPtr = (int *)fileData;
+		value = dataPtr[0];
+
+        UnloadFileData(fileData);
+    }
+
+    return value;
 }
