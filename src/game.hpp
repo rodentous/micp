@@ -75,7 +75,7 @@ private:
 	std::vector<Projectile> projectiles;
 	std::vector<Explosion> explosions;
 
-	float level_transition = 0; // timer for level transition
+	float level_transition; // timer for level transition
 	Sound move_sound, shot_sound, boom_sound, hurt_sound;
 
 	void generate();
@@ -86,7 +86,7 @@ private:
 
 public:
 	Vector2 center, offset; // coordinates of center/offset
-	int score = 0, health = 3;
+	int score, health;
 
 	void next_level();
 

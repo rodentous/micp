@@ -113,28 +113,52 @@ bool Enemy::collide(Vector2 pos, int r)
 
 void Game::generate()
 {
-	std::vector<Vector2> verticies, back_verticies; // verticies of the shape
+	std::vector<Vector2> verticies, inner_verticies; // verticies of the shape
 
 	// reset everything
 	edges.clear();
 	level_transition = 0.5;
+	int size = 0;
 
 	// place points in regular polygon:
-	int size = score / 1000 + 5; // number of points
-	for (int i = 0; i < size; i++)
+	if (GetRandomValue(0, 1))
 	{
-		float x = (center.x + std::sin(DEG2RAD * 360 / size * i) * 40);
-		float y = (center.y - std::cos(DEG2RAD * 360 / size * i) * 40);
-		verticies.push_back((Vector2){ x, y });
+		size = score / 1000 + 5; // number of points
+		for (int i = 0; i < size; i++)
+		{
+			float x = (center.x + std::sin(DEG2RAD * 360 / size * i) * 40);
+			float y = (center.y - std::cos(DEG2RAD * 360 / size * i) * 40);
+			verticies.push_back((Vector2){ x, y });
 
-		x = (offset.x + std::sin(DEG2RAD * 360 / size * i) * 4);
-		y = (offset.y - std::cos(DEG2RAD * 360 / size * i) * 4);
-		back_verticies.push_back((Vector2){ x, y });
+			x = (offset.x + std::sin(DEG2RAD * 360 / size * i) * 4);
+			y = (offset.y - std::cos(DEG2RAD * 360 / size * i) * 4);
+			inner_verticies.push_back((Vector2){ x, y });
+		}
+	}
+	else
+	{
+		size = (score / 1000 + 2) * 2;
+		for (int i = 0; i < size; i++)
+		{
+			float angle = DEG2RAD * 360.0f / size * i;
+
+			// outer verticies
+			float outer_radius = (i % 2 == 0) ? 40.0f : 20.0f;
+			float x = center.x + sin(angle) * outer_radius;
+			float y = center.y - cos(angle) * outer_radius;
+			verticies.push_back((Vector2){x, y});
+
+			// inner verticies
+			float inner_radius = 4.0f;
+			x = offset.x + sin(angle) * inner_radius;
+			y = offset.y - cos(angle) * inner_radius;
+			inner_verticies.push_back((Vector2){x, y});
+		}
 	}
 
 	// create edges
 	for (int i = 0; i < size; i++)
-		edges.push_back((Edge){nullptr, nullptr, verticies[i], verticies[(i + 1) % size], back_verticies[i], back_verticies[(i + 1) % size]});
+		edges.push_back((Edge){nullptr, nullptr, verticies[i], verticies[(i + 1) % size], inner_verticies[i], inner_verticies[(i + 1) % size]});
 
 	// connect edges
 	for (int i = 0; i < size; i++)
@@ -142,7 +166,6 @@ void Game::generate()
 		edges[i].right = &edges[(i + 1) % size];
 		edges[(i + 1) % size].left = &edges[i];
 	}
-
 	player.edge = &edges[0];
 }
 
@@ -213,8 +236,7 @@ void Game::update(float delta_time)
 
 	for (int i = 0; i < projectiles.size(); i++)
 	{
-		if (projectiles[i].update(delta_time))
-			projectiles.erase(projectiles.begin() + i);
+		if (projectiles[i].update(delta_time)) projectiles.erase(projectiles.begin() + i);
 
 		for (int j = 0; j < enemies.size(); j++)
 		{
@@ -235,15 +257,12 @@ void Game::update(float delta_time)
 		if (enemies[i].edging && enemies[i].collide(player.position, player.radius))
 		{
 			enemies.erase(enemies.begin() + i);
-			explosions.push_back(Explosion(player.edge, player.position, RED, 50));
-			PlaySound(hurt_sound);
 			lose_health();
 		}
 	}
 	for (int i = 0; i < explosions.size(); i++)
 	{
-		if (explosions[i].update(delta_time))
-			explosions.erase(explosions.begin() + i);
+		if (explosions[i].update(delta_time)) explosions.erase(explosions.begin() + i);
 	}
 
 
@@ -273,13 +292,15 @@ void Game::update(float delta_time)
 void Game::lose_health()
 {
 	health--;
+	explosions.push_back(Explosion(player.edge, player.position, RED, 50));
+	PlaySound(hurt_sound);
 }
 
 
 void Game::score_points()
 {
 	score += 100;
-	if (score % (1000 + (score / 1000) * 100) == 0)
+	if (score % 1000 == 0)
 		next_level();
 }
 
@@ -289,11 +310,20 @@ Game::Game(Vector2 c) : center(c)
 	offset = Vector2Add(center, (Vector2){0, 10});
 	player = Player(nullptr);
 
+	health = 3;
+	score = 0;
+	level_transition = 0;
+
 	move_sound = LoadSound("sounds/move.wav");
 	shot_sound = LoadSound("sounds/shot.wav");
 	boom_sound = LoadSound("sounds/boom.wav");
 	hurt_sound = LoadSound("sounds/hurt.wav");
 	SetSoundVolume(hurt_sound, 5);
+
+	// TODO: more sounds
+	// over_sound = LoadSound("sounds/over.wav");
+	// main_music = LoadSound("sounds/main.wav");
+	// game_music = LoadSound("sounds/game.wav");
 
 	generate();
 }
