@@ -92,12 +92,9 @@ void Enemy::update(float delta_time)
 		edge = edge->right;
 
 	// draw lines
-	// Vector2 p1 = Vector2MoveTowards(position1, edge->A, radius), p2 = Vector2MoveTowards(position2, edge->B, radius), m1, m2;
 	DrawLineV(position1, position2, RED);
 	DrawCircleV(position1, 5, RED);
 	DrawCircleV(position2, 5, RED);
-	// DrawLineV(p1, p2, RED);
-	
 
 	// is on outer vertex
 	if (Vector2Distance(position1, edge->A) < 1 || Vector2Distance(position2, edge->B) < 1)
@@ -123,15 +120,15 @@ void Game::generate()
 	level_transition = 0.5;
 
 	// place points in regular polygon:
-	int size = score / 1000 + 3; // number of points
+	int size = score / 1000 + 5; // number of points
 	for (int i = 0; i < size; i++)
 	{
-		float x = (center.x + std::sin(DEG2RAD * 360 / size * i) * 30);
-		float y = (center.y - std::cos(DEG2RAD * 360 / size * i) * 30);
+		float x = (center.x + std::sin(DEG2RAD * 360 / size * i) * 40);
+		float y = (center.y - std::cos(DEG2RAD * 360 / size * i) * 40);
 		verticies.push_back((Vector2){ x, y });
 
-		x = (offset.x + std::sin(DEG2RAD * 360 / size * i) * 3);
-		y = (offset.y - std::cos(DEG2RAD * 360 / size * i) * 3);
+		x = (offset.x + std::sin(DEG2RAD * 360 / size * i) * 4);
+		y = (offset.y - std::cos(DEG2RAD * 360 / size * i) * 4);
 		back_verticies.push_back((Vector2){ x, y });
 	}
 
@@ -223,10 +220,10 @@ void Game::update(float delta_time)
 		{
 			if (enemies[j].collide(projectiles[i].position, projectiles[i].radius))
 			{
+				explosions.push_back(Explosion(projectiles[i].edge, projectiles[i].position, SKYBLUE, 30));
+				PlaySound(boom_sound);
 				enemies.erase(enemies.begin() + j);
 				projectiles.erase(projectiles.begin() + i);
-				explosions.push_back(Explosion(projectiles[i].edge, projectiles[i].position, SKYBLUE, 10));
-				PlaySound(boom_sound);
 				score_points();
 			}
 		}
@@ -238,7 +235,7 @@ void Game::update(float delta_time)
 		if (enemies[i].edging && enemies[i].collide(player.position, player.radius))
 		{
 			enemies.erase(enemies.begin() + i);
-			explosions.push_back(Explosion(player.edge, player.position, RED, 20));
+			explosions.push_back(Explosion(player.edge, player.position, RED, 50));
 			PlaySound(hurt_sound);
 			lose_health();
 		}
@@ -263,7 +260,7 @@ void Game::update(float delta_time)
 	}
 	if (IsKeyPressed(KEY_SPACE))
 	{
-		projectiles.push_back(Projectile(player.edge, player.position, 400));
+		projectiles.push_back(Projectile(player.edge, player.position, 500));
 		PlaySound(shot_sound);
 	}
 
@@ -282,20 +279,21 @@ void Game::lose_health()
 void Game::score_points()
 {
 	score += 100;
-	if (score % 1000 == 0)
+	if (score % (1000 + (score / 1000) * 100) == 0)
 		next_level();
 }
 
 
 Game::Game(Vector2 c) : center(c)
 {
-	offset = Vector2Add(center, (Vector2){0, 5});
+	offset = Vector2Add(center, (Vector2){0, 10});
 	player = Player(nullptr);
 
 	move_sound = LoadSound("sounds/move.wav");
 	shot_sound = LoadSound("sounds/shot.wav");
 	boom_sound = LoadSound("sounds/boom.wav");
 	hurt_sound = LoadSound("sounds/hurt.wav");
+	SetSoundVolume(hurt_sound, 5);
 
 	generate();
 }
