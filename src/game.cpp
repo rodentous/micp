@@ -124,8 +124,34 @@ void Game::generate()
 	level_transition = 0.5;
 	int size = score / 1000 + 5; // number of points
 
+	if (score == 0) {
+		size = 4; // square
+	} else if (score == 1000) {
+		size = 5; // pentagon
+	}
+
+	// square 
+	if (score == 0) {
+		for (int i = 0; i < size; i++) 
+		{
+			float angle = DEG2RAD * 360.0f / size * i;
+
+			// outer square
+			float outer_radius = 40.0f;
+			float x = offset.x + sin(angle) * outer_radius;
+			float y = offset.y - cos(angle) * outer_radius;
+			verticies.push_back((Vector2){x, y});
+
+			// inner squre
+			float inner_radius = 4.0f;
+			x = center.x + sin(angle) * inner_radius;
+			y = center.y - cos(angle) * inner_radius;
+			inner_verticies.push_back((Vector2){x, y});
+		}
+    }
+
 	// star
-	if (score / 1000 % 2 == 1)
+	else if (score / 1000 % 2 == 1 && score != 1000)
 	{
 		for (int i = 0; i < size; i++)
 		{
@@ -144,32 +170,21 @@ void Game::generate()
 			inner_verticies.push_back((Vector2){x, y});
 		}
 	}
+	
 	// regular polygon
-	else if (GetRandomValue(0, 1) == 0)
-	{
-		for (int i = 0; i < size; i++)
-		{
-			float x = (offset.x + std::sin(DEG2RAD * 360 / size * i) * 40);
-			float y = (offset.y - std::cos(DEG2RAD * 360 / size * i) * 40);
-			verticies.push_back((Vector2){ x, y });
-
-			x = (center.x + std::sin(DEG2RAD * 360 / size * i) * 4);
-			y = (center.y - std::cos(DEG2RAD * 360 / size * i) * 4);
-			inner_verticies.push_back((Vector2){ x, y });
-		}
-	}
-	// TODO: square
 	else
 	{
 		for (int i = 0; i < size; i++)
 		{
-			float x = (offset.x + std::sin(DEG2RAD * 360 / size * i) * 40);
-			float y = (offset.y - std::cos(DEG2RAD * 360 / size * i) * 40);
-			verticies.push_back((Vector2){ x, y });
+			float angle = DEG2RAD * 360.0f / size * i;
 
-			x = (center.x + std::sin(DEG2RAD * 360 / size * i) * 4);
-			y = (center.y - std::cos(DEG2RAD * 360 / size * i) * 4);
-			inner_verticies.push_back((Vector2){ x, y });
+			float x = offset.x + sin(angle) * 40.0f;
+			float y = offset.y - cos(angle) * 40.0f;
+			verticies.push_back((Vector2){x, y});
+
+			x = center.x + sin(angle) * 4.0f;
+			y = center.y - cos(angle) * 4.0f;
+			inner_verticies.push_back((Vector2){x, y});
 		}
 	}
 
