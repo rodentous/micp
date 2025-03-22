@@ -11,9 +11,9 @@ uniform vec4 colDiffuse;
 // Output fragment color
 out vec4 finalColor;
 
-const vec2 size = vec2(1000, 800);  // Framebuffer size
-const float samples = 5.0;          // Pixels per axis; higher = bigger glow, worse performance
-const float quality = 2.0;          // Defines size factor: Lower = smaller glow, better quality
+const vec2 size = vec2(1920, 1080);  // Framebuffer size
+const float samples = 4.0;           // Pixels per axis; higher = bigger glow, worse performance
+const float quality = 2.0;           // Defines size factor: Lower = smaller glow, better quality
 
 void main()
 {

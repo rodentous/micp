@@ -2,6 +2,7 @@
 #define GAME_H
 
 #include "raylib.h"
+#include "raymath.h"
 #include <vector>
 
 

@@ -6,9 +6,9 @@ int HIGH_SCORE = 0;
 
 int main ()
 {
-	constexpr int width = 1000, height = 800;
+	int width = 1920, height = 1080;
 
-	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
+	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
 	SetTargetFPS(60);
 	InitWindow(width, height, "tempest");
 	InitAudioDevice();
@@ -30,10 +30,28 @@ int main ()
 		{
 			case Main:
 			{
-				DrawText("TEMPEST\n --press enter to start--", 10, 10, 25, WHITE);
+				Vector2 title = (Vector2){width / 2 - 260, height / 4};
+				Rectangle button = (Rectangle){width / 2 - 200, height / 1.5, 400, 100};
 
-				if (IsKeyPressed(KEY_ENTER))
-					state = State::Gameplay;
+				int size = 10;
+				for (int i = size - 1; i >= 0; i--)
+				{
+					Vector2 pos = Vector2Add(title, Vector2Scale(Vector2Subtract(Vector2Add(GetMousePosition(), (Vector2){-700, -20}), title), 0.1 / size * i));
+					DrawText("TEMPEST", pos.x - i*20, pos.y - i*5, 100 + i*10, i == 0 ? BLACK : i != size - 1 ? ColorAlpha(WHITE, 1.0 / size * (size - i)) : RED);
+				}
+
+				if (CheckCollisionPointRec(GetMousePosition(), button))
+				{
+					DrawRectangleRounded(button, 0.1, 10, WHITE);
+					DrawText("START", button.x + 110, button.y + 30, 50, BLACK);
+					if (IsMouseButtonPressed(0))
+						state = State::Gameplay;
+				}
+				else
+				{
+					DrawRectangleRoundedLines(button, 0.1, 10, WHITE);
+					DrawText("START", button.x + 110, button.y + 30, 50, WHITE);
+				}
 			} break;
 			case Gameplay:
 			{
@@ -44,20 +62,36 @@ int main ()
 					state = State::Over;
 				}
 
-				DrawText(TextFormat("SCORE: %d", game.score), 10, 10, 25, WHITE);
-				DrawText(TextFormat("HIGH SCORE: %d", HIGH_SCORE), 10, 40, 25, WHITE);
-				DrawText(TextFormat("HP: %d", game.health), 10, 70, 25, WHITE);
+				DrawText(TextFormat("SCORE: %d", game.score), 10, 10, 50, WHITE);
+				DrawText(TextFormat("HIGH SCORE: %d", HIGH_SCORE), 10, 80, 50, WHITE);
+				DrawText(TextFormat("HP: %d", game.health), 10, 150, 50, WHITE);
 			} break;
 			case Over:
-			{				
-				DrawText("GAME OVER\n --press enter--", 10, 10, 25, WHITE);
-				DrawText(TextFormat("SCORE: %d", game.score), 10, 70, 25, WHITE);
-				DrawText(TextFormat("HIGH SCORE: %d", HIGH_SCORE), 10, 100, 25, WHITE);
+			{
+				Vector2 title = (Vector2){width / 2 - 290, height / 4};
+				Rectangle button = (Rectangle){width / 2 - 200, height / 1.5, 400, 100};
 
-				if (IsKeyPressed(KEY_ENTER))
+				int size = 10;
+				for (int i = size - 1; i >= 0; i--)
 				{
-					game = Game((Vector2){width / 2, height / 2});
-					state = State::Main;
+					Vector2 pos = Vector2Add(title, Vector2Scale(Vector2Subtract(Vector2Add(GetMousePosition(), (Vector2){-1300, -20}), title), 0.1 / size * i));
+					DrawText("GAME OVER", pos.x - i*20, pos.y - i*5, 100 + i*10, i == 0 ? BLACK : i != size - 1 ? ColorAlpha(WHITE, 1.0 / size * (size - i)) : RED);
+				}
+
+				if (CheckCollisionPointRec(GetMousePosition(), button))
+				{
+					DrawRectangleRounded(button, 0.1, 10, WHITE);
+					DrawText("RESTART", button.x + 80, button.y + 30, 50, BLACK);
+					if (IsMouseButtonPressed(0))
+					{
+						state = State::Main;
+						game = Game((Vector2){width / 2, height / 2});
+					}
+				}
+				else
+				{
+					DrawRectangleRoundedLines(button, 0.1, 10, WHITE);
+					DrawText("RESTART", button.x + 80, button.y + 30, 50, WHITE);
 				}
 			} break;
 			default: break;

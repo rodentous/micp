@@ -1,6 +1,5 @@
 #include "game.hpp"
 
-#include "raymath.h"
 #include <cmath>
 #include <random>
 
@@ -127,12 +126,12 @@ void Game::generate()
 	int size = score / 1000 + 10; // number of points
 	for (int i = 0; i < size; i++)
 	{
-		float x = (offset.x + std::sin(360 / size * i * PI / 180) * 30);
-		float y = (offset.y - std::cos(360 / size * i * PI / 180) * 30);
+		float x = (center.x + std::sin(DEG2RAD * 360 / size * i) * 30);
+		float y = (center.y - std::cos(DEG2RAD * 360 / size * i) * 30);
 		verticies.push_back((Vector2){ x, y });
 
-		x = (center.x + std::sin(360 / size * i * PI / 180) * 2);
-		y = (center.y - std::cos(360 / size * i * PI / 180) * 2);
+		x = (offset.x + std::sin(DEG2RAD * 360 / size * i) * 3);
+		y = (offset.y - std::cos(DEG2RAD * 360 / size * i) * 3);
 		back_verticies.push_back((Vector2){ x, y });
 	}
 
@@ -171,10 +170,10 @@ void Game::transition(float delta_time)
 	// move everything on screen
 	for (Edge &edge : edges)
 	{
-		edge.A = Vector2Lerp(edge.A, Vector2Add(edge.A, Vector2Subtract(edge.A, center)), delta_time * 4);
-		edge.B = Vector2Lerp(edge.B, Vector2Add(edge.B, Vector2Subtract(edge.B, center)), delta_time * 4);
-		edge.A2 = Vector2Lerp(edge.A2, Vector2Add(edge.A2, Vector2Subtract(edge.A2, center)), delta_time * 4);
-		edge.B2 = Vector2Lerp(edge.B2, Vector2Add(edge.B2, Vector2Subtract(edge.B2, center)), delta_time * 4);
+		edge.A = Vector2Lerp(edge.A, Vector2Add(edge.A, Vector2Subtract(edge.A, offset)), delta_time * 4);
+		edge.B = Vector2Lerp(edge.B, Vector2Add(edge.B, Vector2Subtract(edge.B, offset)), delta_time * 4);
+		edge.A2 = Vector2Lerp(edge.A2, Vector2Add(edge.A2, Vector2Subtract(edge.A2, offset)), delta_time * 4);
+		edge.B2 = Vector2Lerp(edge.B2, Vector2Add(edge.B2, Vector2Subtract(edge.B2, offset)), delta_time * 4);
 	}
 
 	draw();
@@ -290,7 +289,7 @@ void Game::score_points()
 
 Game::Game(Vector2 c) : center(c)
 {
-	offset = Vector2Add(center, (Vector2){0, -5});
+	offset = Vector2Add(center, (Vector2){0, 5});
 	player = Player(nullptr);
 
 	move_sound = LoadSound("sounds/move.wav");
