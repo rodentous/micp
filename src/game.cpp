@@ -134,7 +134,7 @@ void Game::generate()
 			verticies.push_back((Vector2){x, y});
 
 			// inner verticies
-			float inner_radius = 4.0f;
+			float inner_radius = (i % 2 == 0) ? 4.0f : 2.0f;
 			x = offset.x + sin(angle) * inner_radius;
 			y = offset.y - cos(angle) * inner_radius;
 			inner_verticies.push_back((Vector2){x, y});

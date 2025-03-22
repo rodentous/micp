@@ -72,7 +72,7 @@ int main ()
 				DrawText(TextFormat("SCORE: %d", game.score), 10, 10, 50, WHITE);
 				DrawText(TextFormat("HIGH SCORE: %d", HIGH_SCORE), 10, 80, 50, WHITE);
 				for (int i = 0; i < game.health; i++)
-					DrawText("#", 10 + 50 * i, 150, 50, RED);
+					DrawText("#", width - 300 + 100*i, 10, 100, RED);
 			} break;
 			case Over:
 			{
