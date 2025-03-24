@@ -5,7 +5,6 @@
 
 
 #define DATA "data.lol"
-
 static void SaveScore(int value);
 static int LoadScore();
 
@@ -22,7 +21,7 @@ int main ()
 
 	Game& game = Game::get_instance();
 	enum State {
-		Main, Gameplay, Over
+		Main, Gameplay, Over, Paused,
 	};
 	State state = State::Main;
 	RenderTexture2D target = LoadRenderTexture(width, height);
@@ -70,6 +69,12 @@ int main ()
 			} break;
 			case Gameplay:
 			{
+				if (IsKeyPressed(KEY_TAB))
+				{
+					state = State::Paused;
+					break;
+				}
+
 				game.update(GetFrameTime());
 				if (game.health <= 0)
 				{
@@ -83,8 +88,7 @@ int main ()
 
 				DrawText(TextFormat("SCORE: %d", game.score), 10, 10, 50, WHITE);
 				DrawText(TextFormat("HIGH SCORE: %d", HIGH_SCORE), 10, 80, 50, WHITE);
-				for (int i = 0; i < game.health; i++)
-					DrawText("#", width - 300 + 100*i, 10, 100, RED);
+				for (int i = 0; i < game.health; i++) DrawText("#", width - 300 + 100*i, 10, 100, RED);
 			} break;
 			case Over:
 			{
@@ -107,7 +111,7 @@ int main ()
 					if (IsMouseButtonPressed(0))
 					{
 						state = State::Main;
-						game.score = 0;
+						game.reset();
 					}
 				}
 				else
@@ -118,6 +122,17 @@ int main ()
 				}
 				DrawText(TextFormat("SCORE: %d", game.score), 10, 10, 50, WHITE);
 			} break;
+			case Paused:
+			{
+				DrawText(TextFormat("SCORE: %d", game.score), 10, 10, 50, WHITE);
+				DrawText(TextFormat("HIGH SCORE: %d", HIGH_SCORE), 10, 80, 50, WHITE);
+				for (int i = 0; i < game.health; i++) DrawText("#", width - 300 + 100*i, 10, 100, RED);
+
+				float text_width = MeasureText("PAUSED", 150);
+				DrawText("PAUSED", width/2 - text_width/2, height/3, 150, WHITE);
+				if (IsKeyPressed(KEY_TAB))
+					state = State::Gameplay;
+			}
 			default: break;
 		}
 
