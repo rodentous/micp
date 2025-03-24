@@ -5,17 +5,21 @@
 
 
 
+Object::Object(Edge* e) : edge(e)
+{
+	dead = false;
+	position.x = 0;
+	position.y = 0;
+}
+
 Player::Player(Edge* e) : Object(e)
 {
+	edge = e;
+
 	radius = 10;
 	speed = 10;
 
-	if (!edge)
-	{
-		position.x = 0;
-		position.y = 0;
-		return;
-	}
+	if (!edge) return;
 	position.x = (edge->A.x + edge->B.x) / 2;
 	position.y = (edge->A.y + edge->B.y) / 2;
 }
@@ -34,16 +38,20 @@ void Player::update(float delta_time)
 
 
 
-Projectile::Projectile(Edge* e, Vector2 pos, int s) : Object(e)
+Projectile::Projectile(Edge* e, Vector2 pos) : Object(e)
 {
+	edge = e;
+
 	radius = 5;
-	speed = s;
+	speed = 500;
 
 	position = pos;
 }
 
-bool Projectile::update(float delta_time)
+void Projectile::update(float delta_time)
 {
+	Game& game = Game::get_instance();
+
 	// calculate target position
 	Vector2 target_pos;
 	target_pos.x = (edge->A2.x + edge->B2.x) / 2;
@@ -53,13 +61,29 @@ bool Projectile::update(float delta_time)
 	position = Vector2MoveTowards(position, target_pos, delta_time * speed);
 	DrawCircleV(position, radius, SKYBLUE);
 
-	// return true if projectile should be destroyed
-	return Vector2Distance(position, target_pos) < 1;
+	for (auto& object : game.objects)
+	{
+		if (dynamic_cast<Enemy*>(object.get()) && dynamic_cast<Enemy*>(object.get())->collide(position, radius))
+		{
+			object->dead = true;
+			dead = true;
+			game.score_points();
+			game.objects.push_back(std::make_unique<Explosion>(edge, position, SKYBLUE, 30));
+			PlaySound(game.boom_sound);
+			return;
+		}
+	}
+
+	// projectile should be destroyed
+	if (!dead)
+		dead = Vector2Distance(position, target_pos) < 1;
 }
 
 
 Explosion::Explosion(Edge* e, Vector2 pos, Color c, int r) : Object(e)
 {
+	edge = e;
+
 	radius = r;
 	color = c;
 	lifetime = 1;
@@ -67,32 +91,35 @@ Explosion::Explosion(Edge* e, Vector2 pos, Color c, int r) : Object(e)
 	speed = 0;
 }
 
-bool Explosion::update(float delta_time)
+void Explosion::update(float delta_time)
 {
 	lifetime -= delta_time * 2;
 	radius -= delta_time * 10;
 
 	DrawCircleV(position, radius, color);
 
-	return lifetime < 0;
+	dead = lifetime < 0;
 }
 
 
 Enemy::Enemy(Edge* e, int s) : Object(e)
 {
+	edge = e;
+
 	radius = 15;
 	speed = s;
 
 	if (!edge) return;
-	position1 = edge->A2;
+	position = edge->A2;
 	position2 = edge->B2;
-	position = Vector2Zero();
 	edging = false;
 }
 
 
 void Enemy::update(float delta_time)
 {
+	Game& game = Game::get_instance();
+
 	// if (Vector2Scale(Vector2Subtract(edge->A2, edge->A), ))
 	// jump to adjacent edges
 	if (GetRandomValue(0, 400))
@@ -101,22 +128,25 @@ void Enemy::update(float delta_time)
 		edge = edge->right;
 
 	// draw lines
-	DrawLineV(position1, position2, RED);
-	DrawCircleV(position1, 5, RED);
+	DrawLineV(position, position2, RED);
+	DrawCircleV(position, 5, RED);
 	DrawCircleV(position2, 5, RED);
 
 	// is on outer vertex
-	if (Vector2Distance(position1, edge->A) < 1 || Vector2Distance(position2, edge->B) < 1)
+	if (Vector2Distance(position, edge->A) < 1 || Vector2Distance(position2, edge->B) < 1)
 		edging = true;
 
 	// move
-	position1 = Vector2MoveTowards(position1, edge->A, delta_time * speed);
+	position = Vector2MoveTowards(position, edge->A, delta_time * speed);
 	position2 = Vector2MoveTowards(position2, edge->B, delta_time * speed);
+
+	if (collide(game.player.position, game.player.radius))
+		game.lose_health();
 }
 
 bool Enemy::collide(Vector2 pos, int r)
 {
-    return CheckCollisionCircleLine(pos, r, position1, position2);
+    return CheckCollisionCircleLine(pos, r, position, position2);
 }
 
 
@@ -129,34 +159,8 @@ void Game::generate()
 	level_transition = 0.5;
 	int size = score / 1000 + 5; // number of points
 
-	if (score == 0) {
-		size = 4; // square
-	} else if (score == 1000) {
-		size = 5; // pentagon
-	}
-
-	// square 
-	if (score == 0) {
-		for (int i = 0; i < size; i++) 
-		{
-			float angle = DEG2RAD * 360.0f / size * i;
-
-			// outer square
-			float outer_radius = 40.0f;
-			float x = offset.x + sin(angle) * outer_radius;
-			float y = offset.y - cos(angle) * outer_radius;
-			verticies.push_back((Vector2){x, y});
-
-			// inner squre
-			float inner_radius = 4.0f;
-			x = center.x + sin(angle) * inner_radius;
-			y = center.y - cos(angle) * inner_radius;
-			inner_verticies.push_back((Vector2){x, y});
-		}
-    }
-
 	// star
-	else if (score / 1000 % 2 == 1 && score != 1000)
+	if (score / 1000 % 2 == 1)
 	{
 		for (int i = 0; i < size; i++)
 		{
@@ -175,7 +179,6 @@ void Game::generate()
 			inner_verticies.push_back((Vector2){x, y});
 		}
 	}
-	
 	// regular polygon
 	else
 	{
@@ -210,8 +213,7 @@ void Game::generate()
 void Game::next_level()
 {
 	level_transition = 2; // start animation timer
-	enemies.clear();
-	projectiles.clear();
+	objects.clear();
 }
 
 
@@ -219,7 +221,6 @@ void Game::transition(float delta_time)
 {
 	level_transition -= delta_time * 0.9;
 
-	explosions.clear();
 	// when animation ends, generate new level
 	if (level_transition <= 1.1 && level_transition > 1)
 		generate();
@@ -231,11 +232,9 @@ void Game::transition(float delta_time)
 		edge.B = Vector2Lerp(edge.B, Vector2Add(edge.B, Vector2Subtract(edge.B, offset)), delta_time * 4);
 		edge.A2 = Vector2Lerp(edge.A2, Vector2Add(edge.A2, Vector2Subtract(edge.A2, center)), delta_time * 4);
 		edge.B2 = Vector2Lerp(edge.B2, Vector2Add(edge.B2, Vector2Subtract(edge.B2, center)), delta_time * 4);
-		DrawLineV(edge.A, edge.B, BLUE);
-		DrawLineV(edge.A2, edge.B2, BLUE);
-		DrawLineV(edge.A, edge.A2, BLUE);
-		DrawLineV(edge.B, edge.B2, BLUE);
 	}
+
+	draw();
 }
 
 
@@ -267,10 +266,10 @@ void Game::update(float delta_time)
 		return;
 	}
 
-	// draw map
+	// draw level
 	draw();
 
-	//
+	// offset
 	Vector2 new_offset = Vector2Add(offset, Vector2Scale(Vector2Subtract(player.position, offset), 0.1));
 	for (Edge &edge : edges)
 	{
@@ -281,35 +280,14 @@ void Game::update(float delta_time)
 	// move player, projectiles and enemies
 	player.update(delta_time);
 
-	for (int i = 0; i < projectiles.size(); i++)
+	for (int i = 0; i < objects.size(); i++)
 	{
-		if (projectiles[i].update(delta_time)) projectiles.erase(projectiles.begin() + i);
-
-		for (int j = 0; j < enemies.size(); j++)
+		if (objects[i]->dead)
 		{
-			if (enemies[j].collide(projectiles[i].position, projectiles[i].radius))
-			{
-				explosions.push_back(Explosion(projectiles[i].edge, projectiles[i].position, SKYBLUE, 30));
-				PlaySound(boom_sound);
-				enemies.erase(enemies.begin() + j);
-				projectiles.erase(projectiles.begin() + i);
-				score_points();
-			}
+			objects.erase(objects.begin() + i);
+			continue;
 		}
-	}
-	for (int i = 0; i < enemies.size(); i++)
-	{
-		enemies[i].update(delta_time);
-
-		if (enemies[i].edging && enemies[i].collide(player.position, player.radius))
-		{
-			enemies.erase(enemies.begin() + i);
-			lose_health();
-		}
-	}
-	for (int i = 0; i < explosions.size(); i++)
-	{
-		if (explosions[i].update(delta_time)) explosions.erase(explosions.begin() + i);
+		objects[i]->update(delta_time);
 	}
 
 
@@ -326,24 +304,22 @@ void Game::update(float delta_time)
 	}
 	if (IsKeyPressed(KEY_SPACE))
 	{
-		projectiles.push_back(Projectile(player.edge, player.position, 500));
+		objects.push_back(std::make_unique<Projectile>(player.edge, player.position));
 		PlaySound(shot_sound);
 	}
 	if (IsKeyPressed(KEY_BACKSPACE))
-	{
-		next_level();
-	}
+		score += 1000;
 
 	// spawn enemies
 	if (GetRandomValue(0, 200 - score / 50) == 0)
-		enemies.push_back(Enemy(&edges[GetRandomValue(0, edges.size() - 1)], 50 + score / 50));
+		objects.push_back(std::make_unique<Enemy>(&edges[GetRandomValue(0, edges.size() - 1)], 50 + score / 50));
 }
 
 
 void Game::lose_health()
 {
 	health--;
-	explosions.push_back(Explosion(player.edge, player.position, RED, 50));
+	objects.push_back(std::make_unique<Explosion>(player.edge, player.position, RED, 50));
 	PlaySound(hurt_sound);
 }
 
@@ -356,8 +332,9 @@ void Game::score_points()
 }
 
 
-Game::Game(Vector2 c) : center(c)
+Game::Game()
 {
+	center = (Vector2){1920/2, 1080/2};
 	offset = Vector2Add(center, (Vector2){0, 10});
 	player = Player(nullptr);
 

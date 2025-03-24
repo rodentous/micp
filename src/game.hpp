@@ -4,6 +4,7 @@
 #include "raylib.h"
 #include "raymath.h"
 #include <vector>
+#include <memory>
 
 
 
@@ -18,12 +19,13 @@ class Object
 {
 public:
 	Edge* edge;
+	bool dead;
 	Vector2 position;
-	int speed;
 	int radius;
+	int speed;
 
-	Object(Edge* e) : edge(e) {}
-	void update(float delta_time);
+	Object(Edge* e);
+	virtual void update(float delta_time) {};
 };
 
 
@@ -31,36 +33,40 @@ class Player : public Object
 {
 public:
 	Player(Edge* e);
-	void update(float delta_time);
+	void update(float delta_time) override;
 };
 
 
 class Projectile : public Object
 {
 public:
-	Projectile(Edge* e, Vector2 pos, int s);
-	bool update(float delta_time);
+	Projectile(Edge* e, Vector2 pos);
+	void update(float delta_time) override;
 };
 
 
 class Explosion : public Object
 {
-public:
+protected:
 	float lifetime;
 	Color color;
+
+public:
 	Explosion(Edge* e, Vector2 pos, Color c, int r);
-	bool update(float delta_time);
+	void update(float delta_time) override;
 };
 
 
 class Enemy : public Object
 {
-public:
-	Vector2 position1, position2;
+protected:
 	bool edging;
 
+public:
+	Vector2 position2;
+
 	Enemy(Edge* e, int s);
-	void update(float delta_time);
+	void update(float delta_time) override;
 	bool collide(Vector2 pos, int r);
 };
 
@@ -69,34 +75,37 @@ class Game
 {
 private:
 	std::vector<Edge> edges;
-
-	Player player = Player(nullptr);
-	std::vector<Enemy> enemies;
-	std::vector<Projectile> projectiles;
-	std::vector<Explosion> explosions;
-
 	float level_transition; // timer for level transition
-	Sound move_sound, shot_sound, boom_sound, hurt_sound;
 
 	void generate();
-
 	void transition(float delta_time);
-
 	void draw();
+	void next_level();
+
+	// singleton stuff
+	Game();
+	Game(const Game&) = delete;
+	Game& operator=(const Game&) = delete;
 
 public:
 	Vector2 center, offset; // coordinates of center/offset
+	Sound move_sound, shot_sound, boom_sound, hurt_sound;
+
+	Player player = Player(nullptr);
+	std::vector<std::unique_ptr<Object>> objects;
+
 	int score, health;
 
-	void next_level();
-
 	void lose_health();
-
 	void score_points();
-
 	void update(float delta_time);
 
-	Game(Vector2 c);
+	// get instance of the singleton
+	static Game& get_instance()
+	{
+		static Game instance;
+		return instance;
+	}
 };
 
 #endif

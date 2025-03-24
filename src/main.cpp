@@ -20,7 +20,7 @@ int main ()
 	InitWindow(width, height, "tempest");
 	InitAudioDevice();
 
-	Game game = Game((Vector2){width / 2, height / 2});
+	Game& game = Game::get_instance();
 	enum State {
 		Main, Gameplay, Over
 	};
@@ -107,7 +107,7 @@ int main ()
 					if (IsMouseButtonPressed(0))
 					{
 						state = State::Main;
-						game = Game((Vector2){width / 2, height / 2});
+						game.score = 0;
 					}
 				}
 				else
