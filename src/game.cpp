@@ -10,7 +10,12 @@ Player::Player(Edge* e) : Object(e)
 	radius = 10;
 	speed = 10;
 
-	if (!edge) return;
+	if (!edge)
+	{
+		position.x = 0;
+		position.y = 0;
+		return;
+	}
 	position.x = (edge->A.x + edge->B.x) / 2;
 	position.y = (edge->A.y + edge->B.y) / 2;
 }
