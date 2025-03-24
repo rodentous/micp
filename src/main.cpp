@@ -4,14 +4,27 @@
 
 
 
-#define DATA "data.lol"
-static void SaveScore(int value);
-static int LoadScore();
+void save_score(int value)
+{
+	std::fstream data("data.lol", std::ios::out | std::ios::in | std::ios::app);
+	if (!data.is_open())
+		return;
+	data << value << std::endl;
+	data.close();
+}
+int load_score()
+{
+	std::fstream data("data.lol", std::ios::out | std::ios::in | std::ios::app);
+	int value = 0;
+	if (!data.is_open())
+		return 0;
+	while (data >> value);
+	data.close();
+	return value;
+}
 
 int main ()
 {
-	int HIGH_SCORE = LoadScore();
-
 	float width = 1920, height = 1080;
 
 	SetConfigFlags(FLAG_WINDOW_MAXIMIZED | FLAG_WINDOW_RESIZABLE);
@@ -20,10 +33,10 @@ int main ()
 	InitAudioDevice();
 
 	Game& game = Game::get_instance();
-	enum State {
-		Main, Gameplay, Over, Paused,
-	};
-	State state = State::Main;
+	enum State {Main, Gameplay, Over, Paused}; State state = State::Main;
+	int HIGH_SCORE = load_score();
+
+	// shader
 	RenderTexture2D target = LoadRenderTexture(width, height);
 	Shader bloom = LoadShader(0, "src/bloom.fs");
 
@@ -40,11 +53,11 @@ int main ()
 				Rectangle button = (Rectangle){width / 2 - 200, height / 1.5f, 400, 100};
 
 				int size = 10;
-				for (int i = size - 1; i >= 0; i--)
+				for (int i = 0; i < size; i++)
 				{
 					float text_width = MeasureText("TEMPEST", 100 + i*10);
 					Vector2 pos = Vector2Add(title, Vector2Scale(Vector2Subtract(GetMousePosition(), Vector2Add(title, (Vector2){-2*text_width, 0})), 0.1 / size * i));
-					DrawText("TEMPEST", pos.x - i*20 - text_width/2, pos.y - i*5, 100 + i*10, i == 0 ? BLACK : i != size - 1 ? ColorAlpha(WHITE, 1.0 / size * (size - i)) : RED);
+					DrawText("TEMPEST", pos.x - i*20 - text_width/2, pos.y - i*5, 100 + i*10, i != size - 1 ? ColorAlpha(WHITE, 1.0 / size * (size - i)) : RED);
 				}
 
 				if (CheckCollisionPointRec(GetMousePosition(), button))
@@ -63,9 +76,9 @@ int main ()
 				}
 				DrawText(TextFormat("HIGH SCORE: %d", HIGH_SCORE), 10, 10, 50, WHITE);
 
-				DrawText("MADE BY :(){ :|:& };: TEAM", 10, height-210, 50, WHITE);
-				DrawText("HEAD - JULIA", 10, height-140, 50, WHITE);
-				DrawText("DEVELOPERS - MARK, ANNA", 10, height-70, 50, WHITE);
+				DrawText("MADE BY :(){ :|:& };: TEAM", 10, height-160, 40, WHITE);
+				DrawText("HEAD - JULIA G.", 10, height-110, 40, WHITE);
+				DrawText("DEVELOPERS - MARK M., ANNA M.", 10, height-60, 40, WHITE);
 			} break;
 			case Gameplay:
 			{
@@ -81,13 +94,16 @@ int main ()
 					if (game.score > HIGH_SCORE)
 					{
 						HIGH_SCORE = game.score;
-						SaveScore(HIGH_SCORE);
+						save_score(HIGH_SCORE);
 					}
 					state = State::Over;
 				}
 
 				DrawText(TextFormat("SCORE: %d", game.score), 10, 10, 50, WHITE);
 				DrawText(TextFormat("HIGH SCORE: %d", HIGH_SCORE), 10, 80, 50, WHITE);
+				DrawText("ARROWS - MOVE", 10, height-160, 40, WHITE);
+				DrawText("SPACE - SHOOT", 10, height-110, 40, WHITE);
+				DrawText("TAB - PAUSE", 10, height-60, 40, WHITE);
 				for (int i = 0; i < game.health; i++) DrawText("#", width - 300 + 100*i, 10, 100, RED);
 			} break;
 			case Over:
@@ -96,11 +112,11 @@ int main ()
 				Rectangle button = (Rectangle){width / 2 - 200, height / 1.5f, 400, 100};
 
 				int size = 10;
-				for (int i = size - 1; i >= 0; i--)
+				for (int i = 0; i < size; i++)
 				{
 					float text_width = MeasureText("GAME OVER", 100 + i*10);
 					Vector2 pos = Vector2Add(title, Vector2Scale(Vector2Subtract(GetMousePosition(), Vector2Add(title, (Vector2){-2*text_width, 0})), 0.1 / size * i));
-					DrawText("GAME OVER", pos.x - i*20 - text_width/2, pos.y - i*5, 100 + i*10, i == 0 ? BLACK : i != size - 1 ? ColorAlpha(WHITE, 1.0 / size * (size - i)) : RED);
+					DrawText("GAME OVER", pos.x - i*20 - text_width/2, pos.y - i*5, 100 + i*10, i != size - 1 ? ColorAlpha(WHITE, 1.0 / size * (size - i)) : RED);
 				}
 
 				if (CheckCollisionPointRec(GetMousePosition(), button))
@@ -126,6 +142,9 @@ int main ()
 			{
 				DrawText(TextFormat("SCORE: %d", game.score), 10, 10, 50, WHITE);
 				DrawText(TextFormat("HIGH SCORE: %d", HIGH_SCORE), 10, 80, 50, WHITE);
+				DrawText("ARROWS - MOVE", 10, height-160, 40, WHITE);
+				DrawText("SPACE - SHOOT", 10, height-110, 40, WHITE);
+				DrawText("TAB - PAUSE", 10, height-60, 40, WHITE);
 				for (int i = 0; i < game.health; i++) DrawText("#", width - 300 + 100*i, 10, 100, RED);
 
 				float text_width = MeasureText("PAUSED", 150);
@@ -138,6 +157,7 @@ int main ()
 
 		EndTextureMode();
 
+		// apply shader
 		BeginDrawing();
 			ClearBackground(BLACK);
 			BeginShaderMode(bloom);
@@ -149,53 +169,4 @@ int main ()
 	CloseWindow();
 	CloseAudioDevice();
 	return 0;
-}
-
-
-
-void SaveScore(int value)
-{
-    int dataSize = 0;
-    unsigned int newDataSize = 0;
-    unsigned char *fileData = LoadFileData(DATA, &dataSize);
-    unsigned char *newFileData = NULL;
-
-    if (fileData != NULL)
-    {
-		newFileData = fileData;
-		newDataSize = dataSize;
-
-		int *dataPtr = (int *)newFileData;
-		dataPtr[0] = value;
-
-        SaveFileData(DATA, newFileData, newDataSize);
-        RL_FREE(newFileData);
-    }
-	else
-    {
-        dataSize = sizeof(int);
-        fileData = (unsigned char *)RL_MALLOC(dataSize);
-        int *dataPtr = (int *)fileData;
-        dataPtr[0] = value;
-
-        SaveFileData(DATA, fileData, dataSize);
-        UnloadFileData(fileData);
-    }
-}
-
-int LoadScore()
-{
-    int value = 0;
-    int dataSize = 0;
-    unsigned char *fileData = LoadFileData(DATA, &dataSize);
-
-    if (fileData != NULL)
-    {
-		int *dataPtr = (int *)fileData;
-		value = dataPtr[0];
-
-        UnloadFileData(fileData);
-    }
-
-    return value;
 }
