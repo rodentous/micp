@@ -24,6 +24,8 @@ public:
 		return instance;
 	}
 
+	void Start();
+
 	void Update();
 };
 

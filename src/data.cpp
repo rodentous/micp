@@ -1,5 +1,6 @@
 #include "data.hpp"
 
+#define DATA_FILE "data.lol"
 
 
 // Save integer value to storage file (to defined position)
