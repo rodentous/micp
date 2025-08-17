@@ -114,13 +114,20 @@ void Game::draw()
 }
 
 
-void Game::update(float delta_time)
+void Game::update(float delta_time, float width, float height)
 {
 	// level transition (if happening)
 	if (level_transition > 0)
 	{
 		transition(delta_time);
 		return;
+	}
+
+	Vector2 new_center = (Vector2){width/2, height/2};
+	if (center != new_center) {
+		center = new_center;
+		offset = Vector2Add(center, (Vector2){0, 10});
+		generate();
 	}
 
 	// offset

@@ -33,7 +33,7 @@ public:
 	void lose_health();
 	void score_points();
 	void reset();
-	void update(float delta_time);
+	void update(float delta_time, float width, float height);
 
 	// get instance of the singleton
 	static Game& get_instance()
