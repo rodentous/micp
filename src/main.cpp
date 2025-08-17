@@ -1,4 +1,5 @@
 #include "game.hpp"
+#include <raylib.h>
 #include <string>
 #include <fstream>
 
@@ -40,8 +41,10 @@ int main ()
 	RenderTexture2D target = LoadRenderTexture(width, height);
 	Shader bloom = LoadShader(0, "src/bloom.fs");
 
+
 	while (!WindowShouldClose())
 	{
+		width = GetRenderWidth(), height = GetRenderHeight();
 		BeginTextureMode(target);
 		ClearBackground(BLACK);
 
@@ -88,7 +91,7 @@ int main ()
 					break;
 				}
 
-				game.update(GetFrameTime());
+				game.update(GetFrameTime(), width, height);
 				if (game.health <= 0)
 				{
 					if (game.score > HIGH_SCORE)
